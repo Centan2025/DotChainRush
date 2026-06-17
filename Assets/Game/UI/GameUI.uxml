@@ -1,0 +1,74 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Game/UI/GameUI.uss" />
+    
+    <ui:VisualElement class="game-container flex-col h-full w-full bg-background overflow-hidden">
+        <!-- Background Stars -->
+        <ui:VisualElement name="starsContainer" class="stars-container absolute w-full h-full" />
+
+        <!-- Premium Modern Header -->
+        <ui:VisualElement class="header flex-col w-full">
+            <!-- Row 1: Title and Floating Pause -->
+            <ui:VisualElement class="header-row-title w-full relative justify-center items-center">
+                <!-- Pause Button (Absolute left) -->
+                <ui:Button name="pauseBtn" class="pause-btn icon-btn active-scale absolute-left">
+                    <ui:VisualElement class="icon pause-icon" />
+                </ui:Button>
+
+                <!-- Game Title -->
+                <ui:Label text="BUBBLE BLAST" class="title-text arcade-text" />
+            </ui:VisualElement>
+
+            <!-- Row 2: Three Glassmorphic Cards (Score, Goal, Level) side by side -->
+            <ui:VisualElement class="header-row-cards w-full flex-row justify-center px-4">
+                <!-- Score Card -->
+                <ui:VisualElement class="hud-card flex-row items-center justify-between flex-grow mx-1">
+                    <ui:Label text="SKOR" class="card-label" />
+                    <ui:Label text="000000" name="scoreLabel" class="card-value score-value" />
+                </ui:VisualElement>
+
+                <!-- Goal Card -->
+                <ui:VisualElement class="hud-card flex-row items-center justify-between flex-grow mx-1">
+                    <ui:Label text="HEDEF" class="card-label" />
+                    <ui:Label text="001000" name="goalLabel" class="card-value goal-value" />
+                </ui:VisualElement>
+
+                <!-- Level Card -->
+                <ui:VisualElement class="hud-card flex-row items-center justify-between flex-grow mx-1">
+                    <ui:Label text="LVL" class="card-label" />
+                    <ui:Label text="1" name="levelLabel" class="card-value level-value arcade-text" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Main Gameplay Overlay Area -->
+        <ui:VisualElement class="main-content flex-grow relative">
+            <!-- Premium Multi-Line Combo Indicator Container -->
+            <ui:VisualElement name="comboContainer" class="combo-container absolute flex-col items-center">
+                <ui:Label text="COMBO" name="comboTitle" class="combo-title arcade-text" />
+                <ui:Label text="x4" name="comboMultiplier" class="combo-value arcade-text" />
+                <ui:Label text="12 CHAIN!" name="comboChain" class="combo-chain arcade-text" />
+            </ui:VisualElement>
+            
+            <!-- Danger Countdown & Warning -->
+            <ui:Label text="DANGER! 3s" name="dangerLabel" class="danger-label arcade-text absolute" />
+
+            <!-- Fever Mode Alert -->
+            <ui:Label text="FEVER ACTIVE!" name="feverLabel" class="fever-label arcade-text absolute" />
+        </ui:VisualElement>
+
+        <!-- Level Up Overlay -->
+        <ui:VisualElement name="levelUpOverlay" class="overlay-panel absolute w-full h-full flex-col justify-center items-center">
+            <ui:VisualElement class="popup-box flex-col items-center justify-center">
+                <ui:Label text="SEVİYE TAMAMLANDI!" class="popup-title arcade-text" />
+                <ui:Label text="SEVİYE 2" name="unlockedLevelTitle" class="popup-subtitle" />
+                
+                <ui:VisualElement class="divider w-full" />
+                
+                <ui:Label text="YENİ TEHLİKE AÇILDI:" class="preview-header" />
+                <ui:Label text="Arkalarında ateş izi bırakan Hızlı Toplar yüksek hızda düşmeye başlayacak!" name="levelPreviewText" class="preview-body" />
+                
+                <ui:Button name="continueBtn" text="DEVAM ET" class="continue-btn active-scale" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

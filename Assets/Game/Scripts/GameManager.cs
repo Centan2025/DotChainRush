@@ -1,0 +1,367 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public enum GameState
+{
+    Boot,
+    MainMenu,
+    Playing,
+    Paused,
+    LevelComplete,
+    GameOver
+}
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance { get; private set; }
+
+    [Header("Game Settings")]
+    [SerializeField] private Button restartButton;
+
+    public GameState CurrentState { get; private set; } = GameState.Boot;
+    public delegate void StateChangedHandler(GameState oldState, GameState newState);
+    public static event StateChangedHandler OnStateChanged;
+
+    private float timeElapsed;
+    public bool IsPlaying => CurrentState == GameState.Playing;
+    
+    // Fever Mode variables
+    public bool IsFeverActive { get; private set; }
+    private float feverTimer = 0f;
+
+    // Stats variables
+    public int BestCombo { get; private set; }
+    private bool isLevelingUp = false;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        CleanStraySceneColliders();
+
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(RestartGame);
+        }
+        
+        ChangeState(GameState.MainMenu);
+        RestartGame();
+    }
+
+    public void ChangeState(GameState newState)
+    {
+        if (CurrentState == newState) return;
+        GameState oldState = CurrentState;
+        CurrentState = newState;
+
+        // Apply state transition rules
+        switch (newState)
+        {
+            case GameState.Paused:
+                Time.timeScale = 0f;
+                break;
+            case GameState.Playing:
+                Time.timeScale = 1f;
+                break;
+            case GameState.LevelComplete:
+            case GameState.GameOver:
+                // Special states handling
+                break;
+        }
+
+        OnStateChanged?.Invoke(oldState, newState);
+    }
+
+    private void CleanStraySceneColliders()
+    {
+        Collider2D[] colliders = FindObjectsByType<Collider2D>(FindObjectsSortMode.None);
+        foreach (Collider2D col in colliders)
+        {
+            GameObject go = col.gameObject;
+            // Ensure we are cleaning up active scene objects, not prefabs or core game components
+            if (go.scene.name != null && 
+                go.name != "ScreenBoundaries" && 
+                !go.name.Contains("Circle") && 
+                !go.name.Contains("Prefab"))
+            {
+                Vector2 pos = go.transform.position;
+                // If the collider is in the middle play area, destroy it
+                if (pos.x > -2.6f && pos.x < 2.6f && pos.y > -4.5f && pos.y < 5.5f)
+                {
+                    Debug.LogWarning($"[Diagnostic] Found and destroyed stray collider in the middle of the screen: Name={go.name}, Position={pos}, Type={col.GetType().Name}");
+                    Destroy(go);
+                }
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (CurrentState != GameState.Playing) return;
+
+        timeElapsed += Time.deltaTime;
+        
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateTimer(timeElapsed);
+        }
+
+        // Fever countdown
+        if (IsFeverActive)
+        {
+            feverTimer -= Time.deltaTime;
+            if (feverTimer <= 0f)
+            {
+                DeactivateFeverMode();
+            }
+        }
+    }
+
+    public void RegisterChain(int chainLength)
+    {
+        if (chainLength > BestCombo)
+        {
+            BestCombo = chainLength;
+        }
+
+        if (chainLength >= 20 && !IsFeverActive)
+        {
+            ActivateFeverMode();
+        }
+    }
+
+    private void ActivateFeverMode()
+    {
+        IsFeverActive = true;
+        feverTimer = 5.0f;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetFeverActive(true);
+            UIManager.Instance.TriggerScreenFlash(Color.yellow, 0.4f);
+            UIManager.Instance.ShowComboFeedback("FEVER MODE ACTIVE!", Color.yellow);
+        }
+
+        // Instantly slow gravity of all currently active dots
+        if (DotSpawner.Instance != null)
+        {
+            foreach (Dot dot in DotSpawner.Instance.ActiveDots)
+            {
+                Rigidbody2D dotRb = dot.GetComponent<Rigidbody2D>();
+                if (dotRb != null)
+                {
+                    dotRb.gravityScale = 0.08f;
+                }
+            }
+        }
+    }
+
+    private void DeactivateFeverMode()
+    {
+        IsFeverActive = false;
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetFeverActive(false);
+        }
+
+        // Restore normal gravity on active dots
+        if (DotSpawner.Instance != null)
+        {
+            float baseGravity = DifficultyManager.Instance != null ? DifficultyManager.Instance.GravityScale : 0.5f;
+            foreach (Dot dot in DotSpawner.Instance.ActiveDots)
+            {
+                Rigidbody2D dotRb = dot.GetComponent<Rigidbody2D>();
+                if (dotRb != null)
+                {
+                    dotRb.gravityScale = dot.IsFastDot ? baseGravity * 2.2f : baseGravity;
+                }
+            }
+        }
+    }
+
+    public void AddScore(int dotCount)
+    {
+        if (!IsPlaying) return;
+
+        int points = dotCount * 10;
+        if (IsFeverActive) points *= 10;
+
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.AddPoints(points);
+        }
+    }
+
+    public void CheckLevelCompletion()
+    {
+        if (!IsPlaying || isLevelingUp) return;
+
+        if (DifficultyManager.Instance != null && ScoreManager.Instance != null)
+        {
+            if (ScoreManager.Instance.CurrentScore >= DifficultyManager.Instance.ActiveGoal)
+            {
+                StartCoroutine(LevelUpCoroutine());
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator LevelUpCoroutine()
+    {
+        isLevelingUp = true;
+        DeactivateFeverMode();
+        ChangeState(GameState.LevelComplete);
+
+        // Visual flash and audio celebration
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.TriggerScreenFlash(Color.cyan, 0.6f);
+        }
+        if (AudioManager.Instance != null && DifficultyManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMilestoneSound(3); // Level-up chord sound
+        }
+
+        yield return new WaitForSeconds(0.4f);
+
+        // Melt and sink all active dots downwards
+        if (DotSpawner.Instance != null)
+        {
+            System.Collections.Generic.List<Dot> dotsToMelt = new System.Collections.Generic.List<Dot>(DotSpawner.Instance.ActiveDots);
+            foreach (Dot dot in dotsToMelt)
+            {
+                if (dot != null)
+                {
+                    if (ScoreManager.Instance != null && !dot.IsObstacle)
+                    {
+                        // Award 5 bonus points per dot cleared
+                        ScoreManager.Instance.AddPoints(5);
+                    }
+                    dot.MeltAndSinkDown();
+                }
+            }
+            DotSpawner.Instance.ActiveDots.Clear();
+        }
+
+        yield return new WaitForSeconds(0.8f);
+
+        if (DifficultyManager.Instance != null && UIManager.Instance != null)
+        {
+            int nextLevel = DifficultyManager.Instance.ActiveLevel + 1;
+            string previewText = DifficultyManager.Instance.GetLevelPreviewText(nextLevel);
+
+            UIManager.Instance.ShowLevelUpOverlay(nextLevel, previewText, () =>
+            {
+                DifficultyManager.Instance.SetLevel(nextLevel);
+                UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
+                UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+                ChangeState(GameState.Playing);
+                isLevelingUp = false;
+            });
+        }
+        else
+        {
+            ChangeState(GameState.Playing);
+            isLevelingUp = false;
+        }
+    }
+
+    public void RestartGame()
+    {
+        timeElapsed = 0f;
+        ChangeState(GameState.Playing);
+        BestCombo = 0;
+        IsFeverActive = false;
+        isLevelingUp = false;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetGameOverActive(false);
+            UIManager.Instance.SetFeverActive(false);
+            UIManager.Instance.UpdateTimer(timeElapsed);
+        }
+
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.ResetScore();
+        }
+
+        if (DotSpawner.Instance != null)
+        {
+            DotSpawner.Instance.InitializeSpawner();
+        }
+
+        if (DifficultyManager.Instance != null && UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
+            UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+        }
+    }
+
+    public void GameOver()
+    {
+        if (CurrentState != GameState.Playing) return;
+
+        ChangeState(GameState.GameOver);
+        DeactivateFeverMode();
+
+        int finalScore = ScoreManager.Instance != null ? ScoreManager.Instance.CurrentScore : 0;
+        
+        // Load encrypted persistency stats
+        int savedHighScore = SaveSystem.LoadInt("HighScore", 0);
+        int savedBestCombo = SaveSystem.LoadInt("BestCombo", 0);
+        int playCount = SaveSystem.LoadInt("PlayCount", 0);
+        float totalScores = SaveSystem.LoadFloat("TotalScores", 0f);
+
+        bool isNewHighScore = finalScore > savedHighScore;
+        if (isNewHighScore)
+        {
+            SaveSystem.SaveInt("HighScore", finalScore);
+            savedHighScore = finalScore;
+        }
+
+        if (BestCombo > savedBestCombo)
+        {
+            SaveSystem.SaveInt("BestCombo", BestCombo);
+            savedBestCombo = BestCombo;
+        }
+
+        // Track average scores
+        playCount++;
+        totalScores += finalScore;
+        SaveSystem.SaveInt("PlayCount", playCount);
+        SaveSystem.SaveFloat("TotalScores", totalScores);
+
+        float averageScore = totalScores / playCount;
+        int improvementPercentage = 0;
+        if (averageScore > 0f)
+        {
+            float diff = (finalScore - averageScore) / averageScore * 100f;
+            improvementPercentage = Mathf.RoundToInt(diff);
+        }
+        else
+        {
+            improvementPercentage = 0;
+        }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetGameOverActive(true, finalScore, BestCombo, isNewHighScore, improvementPercentage);
+            UIManager.Instance.UpdateTimer(timeElapsed);
+        }
+
+        if (DotSpawner.Instance != null)
+        {
+            DotSpawner.Instance.ClearAll();
+        }
+    }
+}
