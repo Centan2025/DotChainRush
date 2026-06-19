@@ -2,37 +2,49 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
-    [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI scoreText;
-    [SerializeField] private TextMeshProUGUI timerText;
-    [SerializeField] private GameObject gameOverPanel;
-    [SerializeField] private TextMeshProUGUI comboFeedbackText;
-    [SerializeField] private UnityEngine.UI.Image flashScreenImage;
+    [Header("Top Bar UI References (Canvas TMP)")]
+    [SerializeField] private TextMeshProUGUI scoreText;         // Center big white score
+    [SerializeField] private TextMeshProUGUI bestScoreText;     // Center small gold best score
+    [SerializeField] private TextMeshProUGUI timerText;         // Timer value text (inside circle)
+    [SerializeField] private Image timerProgressCircle;         // Radial Image for timer circle
+    [SerializeField] private TextMeshProUGUI goldText;          // Gold amount value
+    [SerializeField] private Button pauseButton;                // Left pause button
 
-    [Header("UI Toolkit (UXML) References")]
-    [SerializeField] private UIDocument uiDocument;
-    private Label scoreLabelUXML;
-    private Label timerLabelUXML;
-    private VisualElement comboContainerUXML;
-    private Label comboTitleUXML;
-    private Label comboMultiplierUXML;
-    private Label comboChainUXML;
-    private Label dangerLabelUXML;
-    private Label feverLabelUXML;
-    private Label goalLabelUXML;
-    private Label levelLabelUXML;
-    
-    // Level Up Overlay references
-    private VisualElement levelUpOverlayUXML;
-    private Label unlockedLevelTitleUXML;
-    private Label levelPreviewTextUXML;
-    private UnityEngine.UIElements.Button continueBtnUXML;
+    [Header("Fever Panel References")]
+    [SerializeField] private GameObject feverPanel;             // Left Fever container
+    [SerializeField] private Image feverProgressBar;            // Fever slider progress
+    [SerializeField] private FeverSegmentedBar feverSegmentedBar; // 5-slot segmented progress bar
+    [SerializeField] private TextMeshProUGUI feverTimeLeftText;  // Fever remaining seconds
+
+    [Header("Combo & Danger References")]
+    [SerializeField] private GameObject comboContainer;         // Center combo panel
+    [SerializeField] private TextMeshProUGUI comboTitleText;    // "COMBO" text
+    [SerializeField] private TextMeshProUGUI comboMultiplierText; // "x4" multiplier text
+    [SerializeField] private TextMeshProUGUI comboChainText;     // "12 CHAIN" subtext
+    [SerializeField] private GameObject dangerBanner;           // Danger zone hazard strip
+    [SerializeField] private TextMeshProUGUI dangerText;         // Danger countdown text
+    [SerializeField] private Image flashScreenImage;            // Fullscreen feedback flash
+
+    [Header("Bottom Card References")]
+    [SerializeField] private TextMeshProUGUI goalText;          // Bottom goal text
+    [SerializeField] private TextMeshProUGUI levelText;         // Bottom level text
+
+    [Header("Overlay Panels")]
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private GameObject levelUpOverlay;
+    [SerializeField] private TextMeshProUGUI unlockedLevelTitleText;
+    [SerializeField] private TextMeshProUGUI levelPreviewText;
+    [SerializeField] private Button levelUpContinueButton;
+
+    // Neon glow colors
+    private static readonly Color NeonCyan = new Color(0f, 0.85f, 1f, 1f);
+    private static readonly Color NeonPink = new Color(1f, 0.3f, 0.6f, 1f);
+    private static readonly Color DarkPurple = new Color(0.15f, 0.1f, 0.25f, 0.5f);
 
     private Coroutine flashCoroutine;
     private Coroutine feedbackCoroutine;
@@ -41,10 +53,13 @@ public class UIManager : MonoBehaviour
     private Coroutine scoreRollCoroutine;
     private Coroutine scoreScaleCoroutine;
     private Coroutine timerScaleCoroutine;
+    
     private Vector3 originalScoreScale = Vector3.one;
     private Vector3 originalTimerScale = Vector3.one;
     private int targetScore = 0;
     private int lastIntegerTime = -1;
+
+
 
     private void Awake()
     {
@@ -60,77 +75,186 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        if (comboFeedbackText != null) comboFeedbackText.gameObject.SetActive(false);
+        // Deactivate overlay modules initially
+        if (comboContainer != null) comboContainer.SetActive(false);
+        if (dangerBanner != null) dangerBanner.SetActive(false);
+        if (feverPanel != null) feverPanel.SetActive(true);
+        if (levelUpOverlay != null) levelUpOverlay.SetActive(false);
         if (flashScreenImage != null) flashScreenImage.color = Color.clear;
-        
-        if (uiDocument != null)
+
+        if (comboTitleText != null)
         {
-            var root = uiDocument.rootVisualElement;
-            if (root != null)
-            {
-                scoreLabelUXML = root.Q<Label>("scoreLabel");
-                timerLabelUXML = root.Q<Label>("timerLabel");
-                comboContainerUXML = root.Q<VisualElement>("comboContainer");
-                comboTitleUXML = root.Q<Label>("comboTitle");
-                comboMultiplierUXML = root.Q<Label>("comboMultiplier");
-                comboChainUXML = root.Q<Label>("comboChain");
-                dangerLabelUXML = root.Q<Label>("dangerLabel");
-                feverLabelUXML = root.Q<Label>("feverLabel");
-                goalLabelUXML = root.Q<Label>("goalLabel");
-                levelLabelUXML = root.Q<Label>("levelLabel");
-                
-                levelUpOverlayUXML = root.Q<VisualElement>("levelUpOverlay");
-                unlockedLevelTitleUXML = root.Q<Label>("unlockedLevelTitle");
-                levelPreviewTextUXML = root.Q<Label>("levelPreviewText");
-                continueBtnUXML = root.Q<UnityEngine.UIElements.Button>("continueBtn");
-
-                if (comboContainerUXML != null) comboContainerUXML.style.display = DisplayStyle.None;
-                if (dangerLabelUXML != null) dangerLabelUXML.style.display = DisplayStyle.None;
-                if (feverLabelUXML != null) feverLabelUXML.style.display = DisplayStyle.None;
-                if (levelUpOverlayUXML != null) levelUpOverlayUXML.style.display = DisplayStyle.None;
-
-                // Disable old canvas text renderers to show the new ones exclusively
-                if (scoreText != null) scoreText.gameObject.SetActive(false);
-                if (timerText != null) timerText.gameObject.SetActive(false);
-                if (comboFeedbackText != null) comboFeedbackText.gameObject.SetActive(false);
-            }
+            comboTitleText.enableWordWrapping = false;
+        }
+        if (comboMultiplierText != null)
+        {
+            comboMultiplierText.enableWordWrapping = false;
+            comboMultiplierText.enableAutoSizing = true;
+            comboMultiplierText.fontSizeMin = 24;
+            comboMultiplierText.fontSizeMax = 86;
+        }
+        if (comboChainText != null)
+        {
+            comboChainText.enableWordWrapping = false;
         }
 
         if (scoreText != null)
         {
             originalScoreScale = scoreText.transform.localScale;
-            scoreText.text = "000000";
+            scoreText.text = "<b>0</b>";
         }
         if (timerText != null)
         {
             originalTimerScale = timerText.transform.localScale;
-            timerText.text = "00:00";
+            timerText.text = "0:00";
+        }
+
+        UpdateBestScore(SaveSystem.LoadInt("HighScore", 0));
+        UpdateGoldAmount(SaveSystem.LoadInt("GoldCoins", 12450));
+
+        SetupFeverGlow();
+
+        // Dynamically setup and attach RadialTimerController to TimerCircleContainer
+        if (timerProgressCircle != null)
+        {
+            Transform parent = timerProgressCircle.transform.parent;
+            if (parent != null)
+            {
+                // Setup RadialBackground (Track)
+                Transform trackTransform = parent.Find("Track");
+                if (trackTransform != null)
+                {
+                    Image trackImg = trackTransform.GetComponent<Image>();
+                    if (trackImg != null)
+                    {
+                        trackImg.color = new Color(0.12f, 0.09f, 0.18f, 1f); // #1F182E
+                        trackImg.type = Image.Type.Simple;
+                    }
+                }
+
+                // Setup RadialFill (ProgressRing)
+                Image fillImg = timerProgressCircle;
+                fillImg.type = Image.Type.Filled;
+                fillImg.fillMethod = Image.FillMethod.Radial360;
+                fillImg.fillOrigin = (int)Image.Origin360.Top;
+                fillImg.fillClockwise = true;
+
+                // Setup Label (TimeHeader)
+                Transform headerTransform = parent.Find("TimeHeader");
+                if (headerTransform != null)
+                {
+                    TextMeshProUGUI headerText = headerTransform.GetComponent<TextMeshProUGUI>();
+                    if (headerText != null)
+                    {
+                        headerText.color = new Color(0.93f, 0.7f, 1f, 0.6f); // #ECB2FF %60 Opaklık
+                    }
+                }
+
+                // Setup CountdownText (TimerText)
+                if (timerText != null)
+                {
+                    timerText.fontStyle = FontStyles.Bold;
+                }
+
+                // Attach RadialTimerController dynamically
+                RadialTimerController rtc = parent.gameObject.GetComponent<RadialTimerController>();
+                if (rtc == null)
+                {
+                    rtc = parent.gameObject.AddComponent<RadialTimerController>();
+                }
+                rtc.radialFillImage = fillImg;
+                rtc.countdownText = timerText;
+
+                // Create Turuncu (#FF9E0D) -> Pembe (#FF009D) Gradient
+                Gradient grad = new Gradient();
+                GradientColorKey[] gck = new GradientColorKey[2];
+                gck[0] = new GradientColorKey(new Color(1f, 0.62f, 0.05f, 1f), 0f); // #FF9E0D
+                gck[1] = new GradientColorKey(new Color(1f, 0f, 0.61f, 1f), 1f);    // #FF009D
+                GradientAlphaKey[] gak = new GradientAlphaKey[2];
+                gak[0] = new GradientAlphaKey(1f, 0f);
+                gak[1] = new GradientAlphaKey(1f, 1f);
+                grad.SetKeys(gck, gak);
+                rtc.timerGradient = grad;
+                rtc.totalTime = 90f; // 90 saniye (1:30) oyun süresi
+                rtc.ResetTimer();
+            }
+        }
+    }
+
+    private void SetupFeverGlow()
+    {
+        if (feverPanel == null) return;
+
+        // Tint fever progress bar
+        if (feverProgressBar != null)
+        {
+            feverProgressBar.color = NeonPink;
+        }
+
+        // Create fever time text if not assigned
+        if (feverTimeLeftText == null && feverPanel != null)
+        {
+            Transform existing = feverPanel.transform.Find("FeverTimeText");
+            if (existing != null)
+            {
+                feverTimeLeftText = existing.GetComponent<TextMeshProUGUI>();
+            }
+            else
+            {
+                GameObject obj = new GameObject("FeverTimeText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                obj.transform.SetParent(feverPanel.transform, false);
+                RectTransform rect = obj.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0f);
+                rect.anchorMax = new Vector2(0.5f, 0f);
+                rect.pivot = new Vector2(0.5f, 0f);
+                rect.anchoredPosition = new Vector2(0f, -40f); // Positioned nicely below the segmented bar
+                rect.sizeDelta = new Vector2(250f, 50f);
+                feverTimeLeftText = obj.GetComponent<TextMeshProUGUI>();
+                feverTimeLeftText.text = "";
+                feverTimeLeftText.fontSize = 36f; // KOCAMAN ve okunabilir yazı boyutu
+                feverTimeLeftText.color = NeonPink;
+                feverTimeLeftText.fontStyle = FontStyles.Bold;
+                feverTimeLeftText.alignment = TextAlignmentOptions.Center;
+                feverTimeLeftText.raycastTarget = false;
+            }
+        }
+    }
+
+
+
+    public void UpdateBestScore(int bestScore)
+    {
+        if (bestScoreText != null)
+        {
+            bestScoreText.text = string.Format("<b>{0:N0}</b>", bestScore);
+        }
+    }
+
+    public void UpdateGoldAmount(int goldCoins)
+    {
+        if (goldText != null)
+        {
+            goldText.text = string.Format("{0:N0}", goldCoins);
         }
     }
 
     public void UpdateScore(int score)
     {
         targetScore = score;
-        
         if (scoreRollCoroutine != null) StopCoroutine(scoreRollCoroutine);
         scoreRollCoroutine = StartCoroutine(RollScoreCoroutine(score));
 
-        if (scoreScaleCoroutine != null) StopCoroutine(scoreScaleCoroutine);
-        scoreScaleCoroutine = StartCoroutine(ScalePopCoroutine(scoreText.transform, originalScoreScale, 1.15f, 0.15f));
+        if (scoreText != null)
+        {
+            if (scoreScaleCoroutine != null) StopCoroutine(scoreScaleCoroutine);
+            scoreScaleCoroutine = StartCoroutine(ScalePopCoroutine(scoreText.transform, originalScoreScale, 1.15f, 0.15f));
+        }
     }
 
     public void UpdateTimer(float timeElapsed)
     {
-        int minutes = Mathf.FloorToInt(timeElapsed / 60f);
+        // Let RadialTimerController handle text and radial fill updates
         int seconds = Mathf.FloorToInt(timeElapsed % 60f);
-        string formattedTime = string.Format("{0:00}:{1:00}", minutes, seconds);
-
-        if (timerText != null)
-        {
-            timerText.text = formattedTime;
-        }
-
-        // Pulse the timer every second for a game-like heartbeat effect
         if (seconds != lastIntegerTime)
         {
             lastIntegerTime = seconds;
@@ -144,36 +268,50 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator RollScoreCoroutine(int target)
     {
-        float duration = 0.4f;
+        // Faster rolling animation that increments through every single score unit (1, 2, ..., target)
+        // using a rapid lerp over a short duration, but ensuring we display integer steps.
+        float duration = 0.35f;
         float elapsed = 0f;
         float start = currentDisplayedScore;
 
-        while (elapsed < duration)
+        if (Mathf.Abs(target - start) > 0)
         {
-            elapsed += Time.deltaTime;
-            currentDisplayedScore = Mathf.Lerp(start, target, elapsed / duration);
-            string formattedScore = string.Format("{0:000000}", Mathf.RoundToInt(currentDisplayedScore));
-            
-            if (scoreText != null)
+            while (elapsed < duration)
             {
-                scoreText.text = formattedScore;
+                elapsed += Time.deltaTime;
+                float progress = elapsed / duration;
+                // Use a smooth/fast progression
+                currentDisplayedScore = Mathf.Lerp(start, target, progress);
+                int currentVal = Mathf.RoundToInt(currentDisplayedScore);
+                
+                // Group with commas like 1,234,560 and apply bold styling tags (not italic)
+                string formattedScore = string.Format("<b>{0:N0}</b>", currentVal);
+
+                if (scoreText != null)
+                {
+                    scoreText.text = formattedScore;
+                }
+
+                int activeHighScore = SaveSystem.LoadInt("HighScore", 0);
+                if (currentVal > activeHighScore)
+                {
+                    UpdateBestScore(currentVal);
+                }
+                yield return null;
             }
-            if (scoreLabelUXML != null)
-            {
-                scoreLabelUXML.text = formattedScore;
-            }
-            yield return null;
         }
 
         currentDisplayedScore = target;
-        string finalScore = string.Format("{0:000000}", target);
+        string finalScore = string.Format("<b>{0:N0}</b>", target);
         if (scoreText != null)
         {
             scoreText.text = finalScore;
         }
-        if (scoreLabelUXML != null)
+
+        int endHighScore = SaveSystem.LoadInt("HighScore", 0);
+        if (target > endHighScore)
         {
-            scoreLabelUXML.text = finalScore;
+            UpdateBestScore(target);
         }
     }
 
@@ -183,7 +321,6 @@ public class UIManager : MonoBehaviour
 
         float halfDuration = duration / 2f;
         
-        // Scale Up
         float elapsed = 0f;
         while (elapsed < halfDuration)
         {
@@ -192,7 +329,6 @@ public class UIManager : MonoBehaviour
             yield return null;
         }
 
-        // Scale Down
         elapsed = 0f;
         while (elapsed < halfDuration)
         {
@@ -211,13 +347,14 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(active);
             if (active)
             {
-                // Find and set text values on TMPro components in children
+                UpdateBestScore(SaveSystem.LoadInt("HighScore", finalScore));
+
                 TextMeshProUGUI[] texts = gameOverPanel.GetComponentsInChildren<TextMeshProUGUI>(true);
                 foreach (TextMeshProUGUI txt in texts)
                 {
                     if (txt.gameObject.name == "ScoreTextVal")
                     {
-                        txt.text = $"SKOR: {finalScore}";
+                        txt.text = $"SKOR: {finalScore:N0}";
                     }
                     else if (txt.gameObject.name == "BestComboTextVal")
                     {
@@ -225,7 +362,7 @@ public class UIManager : MonoBehaviour
                     }
                     else if (txt.gameObject.name == "HighScoreTextVal")
                     {
-                        txt.text = isNewHighScore ? "YENİ EN YÜKSEK SKOR!" : $"EN YÜKSEK SKOR: {SaveSystem.LoadInt("HighScore", 0)}";
+                        txt.text = isNewHighScore ? "YENİ EN YÜKSEK SKOR!" : $"EN YÜKSEK SKOR: {SaveSystem.LoadInt("HighScore", 0):N0}";
                         txt.color = isNewHighScore ? new Color(1f, 0.84f, 0f) : Color.white;
                     }
                     else if (txt.gameObject.name == "ImprovementTextVal")
@@ -290,29 +427,27 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator FeedbackCoroutine(string title, string value, string subtitle, Color color)
     {
-        bool useUXML = (comboContainerUXML != null);
+        // Styling like the provided image: Bold, Italic, orange/yellow gradient coloring
+        // We can use TextMeshPro's <color> or styling tags for a beautiful gradient look.
+        if (comboTitleText != null) 
+            comboTitleText.text = "<i><b>COMBO</b></i>";
+        
+        if (comboMultiplierText != null) 
+            comboMultiplierText.text = $"<i><b>{value}</b></i>";
+            
+        if (comboChainText != null) 
+            comboChainText.text = string.IsNullOrEmpty(subtitle) ? "" : $"<i><b>{subtitle}</b></i>";
 
-        if (useUXML)
+        // Assigning warm orange/yellow gradient color
+        Color warmOrange = new Color(1f, 0.65f, 0f); // Beautiful bright orange
+        if (comboTitleText != null) comboTitleText.color = warmOrange;
+        if (comboMultiplierText != null) comboMultiplierText.color = warmOrange;
+        if (comboChainText != null) comboChainText.color = new Color(1f, 0.8f, 0.2f); // Golden yellow
+
+        if (comboContainer != null)
         {
-            if (comboTitleUXML != null) comboTitleUXML.text = title;
-            if (comboMultiplierUXML != null) comboMultiplierUXML.text = value;
-            if (comboChainUXML != null) comboChainUXML.text = subtitle;
-
-            // Set color overrides if needed, otherwise default styles apply
-            if (comboTitleUXML != null) comboTitleUXML.style.color = (title == "FEVER") ? Color.yellow : new Color(1f, 0.66f, 0f);
-            if (comboMultiplierUXML != null) comboMultiplierUXML.style.color = color;
-            if (comboChainUXML != null) comboChainUXML.style.color = (title == "FEVER") ? Color.white : new Color(0.36f, 0.94f, 1f);
-
-            comboContainerUXML.style.display = DisplayStyle.Flex;
-            comboContainerUXML.style.scale = new StyleScale(new Scale(new Vector3(0.5f, 0.5f, 1f)));
-            comboContainerUXML.style.opacity = 1f;
-        }
-        else if (comboFeedbackText != null)
-        {
-            comboFeedbackText.text = $"{title} {value} {subtitle}".Trim();
-            comboFeedbackText.color = color;
-            comboFeedbackText.gameObject.SetActive(true);
-            comboFeedbackText.transform.localScale = Vector3.one * 0.5f;
+            comboContainer.SetActive(true);
+            comboContainer.transform.localScale = Vector3.one * 0.5f;
         }
 
         float elapsed = 0f;
@@ -320,89 +455,92 @@ public class UIManager : MonoBehaviour
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            float currentScale = Mathf.Lerp(0.5f, 1.25f, t);
-
-            if (useUXML)
+            float currentScale = Mathf.Lerp(0.5f, 1.25f, elapsed / duration);
+            if (comboContainer != null)
             {
-                comboContainerUXML.style.scale = new StyleScale(new Scale(new Vector3(currentScale, currentScale, 1f)));
-            }
-            else if (comboFeedbackText != null)
-            {
-                comboFeedbackText.transform.localScale = Vector3.one * currentScale;
+                comboContainer.transform.localScale = Vector3.one * currentScale;
             }
             yield return null;
         }
 
         yield return new WaitForSeconds(0.75f);
 
-        // Smooth fade out
-        if (useUXML)
+        if (comboContainer != null)
         {
-            elapsed = 0f;
-            float fadeDuration = 0.18f;
-            while (elapsed < fadeDuration)
-            {
-                elapsed += Time.deltaTime;
-                float t = elapsed / fadeDuration;
-                float opacity = Mathf.Lerp(1f, 0f, t);
-                comboContainerUXML.style.opacity = opacity;
-                yield return null;
-            }
-        }
-
-        if (useUXML)
-        {
-            comboContainerUXML.style.display = DisplayStyle.None;
-        }
-        else if (comboFeedbackText != null)
-        {
-            comboFeedbackText.gameObject.SetActive(false);
-        }
-    }
-
-    private void Update()
-    {
-        if (feverLabelUXML != null && feverLabelUXML.resolvedStyle.display == DisplayStyle.Flex)
-        {
-            float scale = 1.0f + 0.08f * Mathf.Sin(Time.time * 12f);
-            feverLabelUXML.style.scale = new StyleScale(new Scale(new Vector3(scale, scale, 1f)));
+            comboContainer.SetActive(false);
         }
     }
 
     public void SetDangerActive(bool active, string text = "")
     {
-        if (dangerLabelUXML != null)
+        if (dangerBanner != null)
         {
-            dangerLabelUXML.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
-            if (active && !string.IsNullOrEmpty(text))
-            {
-                dangerLabelUXML.text = text;
-            }
+            dangerBanner.SetActive(active);
+        }
+        if (dangerText != null && active && !string.IsNullOrEmpty(text))
+        {
+            dangerText.text = text;
         }
     }
 
     public void SetFeverActive(bool active)
     {
-        if (feverLabelUXML != null)
+        // Keep the feverPanel active at all times so progress is visible.
+        // We can use this to trigger a visual glow effect or animation.
+        if (feverPanel != null)
         {
-            feverLabelUXML.style.display = active ? DisplayStyle.Flex : DisplayStyle.None;
+            feverPanel.SetActive(true);
+        }
+    }
+
+    public void UpdateFeverProgress(float current, float max)
+    {
+        if (feverProgressBar != null)
+        {
+            float fill = max > 0 ? Mathf.Clamp01(current / max) : 0f;
+            feverProgressBar.fillAmount = fill;
+        }
+        if (feverSegmentedBar != null)
+        {
+            float fill = max > 0 ? Mathf.Clamp01(current / max) : 0f;
+            feverSegmentedBar.SetProgress(fill);
+        }
+        if (feverTimeLeftText != null)
+        {
+            bool isFever = GameManager.Instance != null && GameManager.Instance.IsFeverActive;
+            if (isFever)
+            {
+                feverTimeLeftText.text = $"{current:F1}s";
+            }
+            else
+            {
+                int chain = Mathf.RoundToInt(current);
+                int threshold = Mathf.RoundToInt(max);
+                feverTimeLeftText.text = chain > 0 ? $"{chain}/{threshold}" : "";
+            }
         }
     }
 
     public void UpdateGoal(int goal)
     {
-        if (goalLabelUXML != null)
+        if (goalText != null)
         {
-            goalLabelUXML.text = string.Format("{0:000000}", goal);
+            goalText.text = $"HEDEF: {goal:N0}";
         }
     }
 
     public void UpdateLevel(int level)
     {
-        if (levelLabelUXML != null)
+        if (levelText != null)
         {
-            levelLabelUXML.text = level.ToString();
+            string subtitle = "";
+            if (DifficultyManager.Instance != null)
+            {
+                subtitle = DifficultyManager.Instance.LevelSubtitle;
+            }
+            levelText.text = string.IsNullOrEmpty(subtitle)
+                ? $"LVL {level}"
+                : $"LVL {level}\n<size=60%>{subtitle}</size>";
         }
     }
 
@@ -410,38 +548,39 @@ public class UIManager : MonoBehaviour
 
     public void ShowLevelUpOverlay(int nextLevel, string previewText, System.Action onContinue)
     {
-        if (levelUpOverlayUXML != null)
+        if (levelUpOverlay != null)
         {
-            if (unlockedLevelTitleUXML != null)
+            if (unlockedLevelTitleText != null)
             {
-                unlockedLevelTitleUXML.text = $"SEVİYE {nextLevel}";
+                string title = LevelData.GetLevelDisplayTitle(nextLevel);
+                unlockedLevelTitleText.text = $"SEVİYE {nextLevel}\n<size=70%>{title}</size>";
             }
-            if (levelPreviewTextUXML != null)
+            if (levelPreviewText != null)
             {
-                levelPreviewTextUXML.text = previewText;
+                levelPreviewText.text = previewText;
             }
 
-            levelUpOverlayUXML.style.display = DisplayStyle.Flex;
+            levelUpOverlay.SetActive(true);
 
-            // Remove existing listener to prevent duplicate clicks
-            continueBtnUXML.clicked -= OnLevelUpContinueClicked;
-            onLevelUpOverlayContinueCallback = onContinue;
-            continueBtnUXML.clicked += OnLevelUpContinueClicked;
+            if (levelUpContinueButton != null)
+            {
+                levelUpContinueButton.onClick.RemoveAllListeners();
+                onLevelUpOverlayContinueCallback = onContinue;
+                levelUpContinueButton.onClick.AddListener(OnLevelUpContinueClicked);
+            }
         }
         else
         {
-            // If UI elements are missing, immediately fallback and continue
             onContinue?.Invoke();
         }
     }
 
     private void OnLevelUpContinueClicked()
     {
-        if (levelUpOverlayUXML != null)
+        if (levelUpOverlay != null)
         {
-            levelUpOverlayUXML.style.display = DisplayStyle.None;
+            levelUpOverlay.SetActive(false);
         }
-        continueBtnUXML.clicked -= OnLevelUpContinueClicked;
         onLevelUpOverlayContinueCallback?.Invoke();
     }
 }

@@ -28,6 +28,8 @@ public class GameManager : MonoBehaviour
     // Fever Mode variables
     public bool IsFeverActive { get; private set; }
     private float feverTimer = 0f;
+    private int feverChainProgress = 0; // Accumulates chain progress towards fever (0..20)
+    private const int FeverChainThreshold = 20;
 
     // Stats variables
     public int BestCombo { get; private set; }
@@ -54,7 +56,7 @@ public class GameManager : MonoBehaviour
             restartButton.onClick.AddListener(RestartGame);
         }
         
-        ChangeState(GameState.MainMenu);
+        ChangeState(GameState.Playing);
         RestartGame();
     }
 
@@ -96,7 +98,7 @@ public class GameManager : MonoBehaviour
             {
                 Vector2 pos = go.transform.position;
                 // If the collider is in the middle play area, destroy it
-                if (pos.x > -2.6f && pos.x < 2.6f && pos.y > -4.5f && pos.y < 5.5f)
+                if (pos.x > -2.6f && pos.x < 2.6f && pos.y > -4.0f && pos.y < 4.5f)
                 {
                     Debug.LogWarning($"[Diagnostic] Found and destroyed stray collider in the middle of the screen: Name={go.name}, Position={pos}, Type={col.GetType().Name}");
                     Destroy(go);
@@ -116,13 +118,22 @@ public class GameManager : MonoBehaviour
             UIManager.Instance.UpdateTimer(timeElapsed);
         }
 
-        // Fever countdown
-        if (IsFeverActive)
+        // Fever countdown and progress bar update
+        if (UIManager.Instance != null)
         {
-            feverTimer -= Time.deltaTime;
-            if (feverTimer <= 0f)
+            if (IsFeverActive)
             {
-                DeactivateFeverMode();
+                feverTimer -= Time.deltaTime;
+                UIManager.Instance.UpdateFeverProgress(feverTimer, 5f);
+                if (feverTimer <= 0f)
+                {
+                    DeactivateFeverMode();
+                }
+            }
+            else
+            {
+                // Show accumulated chain progress towards fever threshold
+                UIManager.Instance.UpdateFeverProgress(feverChainProgress, FeverChainThreshold);
             }
         }
     }
@@ -134,9 +145,16 @@ public class GameManager : MonoBehaviour
             BestCombo = chainLength;
         }
 
-        if (chainLength >= 20 && !IsFeverActive)
+        if (!IsFeverActive)
         {
-            ActivateFeverMode();
+            // Accumulate chain progress towards fever
+            feverChainProgress = Mathf.Min(feverChainProgress + chainLength, FeverChainThreshold);
+
+            if (feverChainProgress >= FeverChainThreshold)
+            {
+                feverChainProgress = 0;
+                ActivateFeverMode();
+            }
         }
     }
 
@@ -239,7 +257,7 @@ public class GameManager : MonoBehaviour
             System.Collections.Generic.List<Dot> dotsToMelt = new System.Collections.Generic.List<Dot>(DotSpawner.Instance.ActiveDots);
             foreach (Dot dot in dotsToMelt)
             {
-                if (dot != null)
+                if (dot != null && dot.gameObject.activeInHierarchy)
                 {
                     if (ScoreManager.Instance != null && !dot.IsObstacle)
                     {
@@ -264,6 +282,19 @@ public class GameManager : MonoBehaviour
                 DifficultyManager.Instance.SetLevel(nextLevel);
                 UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
                 UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+                
+                RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
+                if (rtc != null)
+                {
+                    rtc.ResetTimer();
+                }
+
+                CircularTimer ct = FindAnyObjectByType<CircularTimer>();
+                if (ct != null)
+                {
+                    ct.ResetTimer();
+                }
+
                 ChangeState(GameState.Playing);
                 isLevelingUp = false;
             });
@@ -282,12 +313,26 @@ public class GameManager : MonoBehaviour
         BestCombo = 0;
         IsFeverActive = false;
         isLevelingUp = false;
+        feverChainProgress = 0;
 
         if (UIManager.Instance != null)
         {
             UIManager.Instance.SetGameOverActive(false);
             UIManager.Instance.SetFeverActive(false);
             UIManager.Instance.UpdateTimer(timeElapsed);
+            UIManager.Instance.UpdateFeverProgress(feverChainProgress, FeverChainThreshold);
+        }
+
+        RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
+        if (rtc != null)
+        {
+            rtc.ResetTimer();
+        }
+
+        CircularTimer ct = FindAnyObjectByType<CircularTimer>();
+        if (ct != null)
+        {
+            ct.ResetTimer();
         }
 
         if (ScoreManager.Instance != null)

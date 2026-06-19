@@ -6,12 +6,55 @@ using TMPro;
 
 public class GameSetup
 {
+    [MenuItem("Tools/Add Neon Background Only")]
+    public static void AddBackgroundOnly()
+    {
+        // First, check if there's an old UI GameBackground and destroy it
+        Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+        if (canvas != null)
+        {
+            Transform oldUI = canvas.transform.Find("GameBackground");
+            if (oldUI != null) Object.DestroyImmediate(oldUI.gameObject);
+        }
+
+        GameObject bgGO = GameObject.Find("GameBackground");
+        if (bgGO == null)
+        {
+            bgGO = new GameObject("GameBackground");
+        }
+        bgGO.transform.SetParent(null);
+        bgGO.transform.position = new Vector3(0f, 0f, 0f);
+
+        SpriteRenderer bgSR = bgGO.GetComponent<SpriteRenderer>();
+        if (bgSR == null) bgSR = bgGO.AddComponent<SpriteRenderer>();
+
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/game_background.png");
+        if (bgSprite != null)
+        {
+            bgSR.sprite = bgSprite;
+            bgSR.color = new Color(1f, 1f, 1f, 0.5f); // 50% opacity in world space
+        }
+        bgSR.sortingOrder = -10; // Draw behind gameplay dots (dots are at 0)
+
+        // Scale to cover orthographic size 5 viewport (already large at 10.8x19.2 units)
+        bgGO.transform.localScale = Vector3.one;
+
+        NeonBackgroundAnimator animator = bgGO.GetComponent<NeonBackgroundAnimator>();
+        if (animator == null) bgGO.AddComponent<NeonBackgroundAnimator>();
+
+        Debug.Log("Successfully added Neon World Background!");
+    }
+
+
     [MenuItem("Tools/Setup Dot Chain Rush")]
     public static void SetupGame()
     {
         // 0a. Create Texture Placeholders
         CreatePlaceholderTexture("Assets/Textures/pause_circle.png", new Color(0.82f, 0.74f, 1f)); // Light Purple
-        CreatePlaceholderTexture("Assets/Textures/timer.png", new Color(0.49f, 0.96f, 1f)); // Cyan
+        
+        // Build hollow gradient ring for timer
+        BuildGradientRingTexture("Assets/Textures/timer.png");
+
         CreatePlaceholderTexture("Assets/Textures/bolt.png", new Color(1f, 0.84f, 0f)); // Gold/Yellow
         CreatePlaceholderTexture("Assets/Textures/rocket.png", new Color(1f, 0.45f, 0.35f)); // Coral Red
         CreatePlaceholderTexture("Assets/Textures/refresh.png", new Color(0.8f, 0.76f, 0.85f)); // Light gray-purple
@@ -624,20 +667,69 @@ public class GameSetup
         serializedChain.FindProperty("dotLayerMask").intValue = 1 << 0; // Default layer
         serializedChain.ApplyModifiedProperties();
 
-        // 8. Setup Canvas & UI
-        Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+        // 8. Setup Canvas & UI — Find or create Canvas with guaranteed correct configuration
+        Canvas canvas = null;
+        Canvas[] allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+
+        // Find our main "Canvas" by name
+        foreach (Canvas c in allCanvases)
+        {
+            if (c.gameObject.name == "Canvas")
+            {
+                canvas = c;
+                break;
+            }
+        }
+
+        // Destroy any stray canvases that could overlay/block our UI
+        foreach (Canvas c in allCanvases)
+        {
+            if (c != canvas)
+            {
+                Debug.LogWarning($"[Setup] Removing stray Canvas: {c.gameObject.name}");
+                Object.DestroyImmediate(c.gameObject);
+            }
+        }
+
         if (canvas == null)
         {
             GameObject canvasGO = new GameObject("Canvas");
             canvas = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        }
 
-            CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
-            scaler.matchWidthOrHeight = 0.5f;
+        // ALWAYS ensure proper Canvas configuration (critical fix for pre-existing Canvas)
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+        canvas.gameObject.SetActive(true);
 
-            canvasGO.AddComponent<GraphicRaycaster>();
+        // Remove any UIDocument component that could interfere with Canvas rendering
+        var canvasUIDoc = canvas.GetComponent<UnityEngine.UIElements.UIDocument>();
+        if (canvasUIDoc != null)
+        {
+            Debug.LogWarning("[Setup] Removing UIDocument from Canvas to fix rendering");
+            Object.DestroyImmediate(canvasUIDoc);
+        }
+
+        // Ensure CanvasScaler is properly configured
+        CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+        if (scaler == null) scaler = canvas.gameObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1080, 1920);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        // Ensure GraphicRaycaster for button interactions
+        if (canvas.GetComponent<GraphicRaycaster>() == null)
+            canvas.gameObject.AddComponent<GraphicRaycaster>();
+
+        // Deep clean: Destroy all existing UI child objects under Canvas to clear historical elements
+        System.Collections.Generic.List<Transform> childrenToDestroy = new System.Collections.Generic.List<Transform>();
+        for (int i = 0; i < canvas.transform.childCount; i++)
+        {
+            childrenToDestroy.Add(canvas.transform.GetChild(i));
+        }
+        foreach (Transform child in childrenToDestroy)
+        {
+            Object.DestroyImmediate(child.gameObject);
         }
 
         // EventSystem
@@ -649,111 +741,504 @@ public class GameSetup
             esGO.AddComponent<StandaloneInputModule>();
         }
 
-        // Score Text
-        TextMeshProUGUI scoreText = null;
-        Transform scoreTextTransform = canvas.transform.Find("ScoreText");
-        if (scoreTextTransform == null)
-        {
-            GameObject scoreGO = new GameObject("ScoreText");
-            scoreGO.transform.SetParent(canvas.transform, false);
-            scoreText = scoreGO.AddComponent<TextMeshProUGUI>();
-            scoreText.fontSize = 64;
-            scoreText.text = "Score: 0";
-            scoreText.color = Color.white;
-            scoreText.alignment = TextAlignmentOptions.Left;
+        // Rebuild Background Sprite (Neon wave background in world space)
+        GameObject bgGO = GameObject.Find("GameBackground");
+        if (bgGO == null) bgGO = new GameObject("GameBackground");
+        bgGO.transform.SetParent(null);
+        bgGO.transform.position = new Vector3(0f, 0f, 0f);
 
-            RectTransform rect = scoreGO.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(50f, -50f);
-            rect.sizeDelta = new Vector2(400f, 100f);
-        }
-        else
-        {
-            scoreText = scoreTextTransform.GetComponent<TextMeshProUGUI>();
-        }
+        SpriteRenderer bgSR = bgGO.GetComponent<SpriteRenderer>();
+        if (bgSR == null) bgSR = bgGO.AddComponent<SpriteRenderer>();
 
-        // Timer Text
-        TextMeshProUGUI timerText = null;
-        Transform timerTextTransform = canvas.transform.Find("TimerText");
-        if (timerTextTransform == null)
+        Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/game_background.png");
+        if (bgSprite != null)
         {
-            GameObject timerGO = new GameObject("TimerText");
-            timerGO.transform.SetParent(canvas.transform, false);
-            timerText = timerGO.AddComponent<TextMeshProUGUI>();
-            timerText.fontSize = 64;
-            timerText.text = "Time: 60s";
-            timerText.color = Color.white;
-            timerText.alignment = TextAlignmentOptions.Right;
+            bgSR.sprite = bgSprite;
+            bgSR.color = new Color(1f, 1f, 1f, 0.5f); // 50% opacity in world space
+        }
+        bgSR.sortingOrder = -10; // Draw behind gameplay dots
+        bgGO.transform.localScale = Vector3.one;
 
-            RectTransform rect = timerGO.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1f, 1f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-50f, -50f);
-            rect.sizeDelta = new Vector2(400f, 100f);
-        }
-        else
-        {
-            timerText = timerTextTransform.GetComponent<TextMeshProUGUI>();
-        }
+        NeonBackgroundAnimator animator = bgGO.GetComponent<NeonBackgroundAnimator>();
+        if (animator == null) bgGO.AddComponent<NeonBackgroundAnimator>();
+
+
+        // Rebuild 1. Pause Button (Top Left)
+        GameObject pauseGO = new GameObject("PauseButton");
+        pauseGO.transform.SetParent(canvas.transform, false);
+        Image pauseImg = pauseGO.AddComponent<Image>();
+        pauseImg.color = new Color(0.07f, 0.06f, 0.11f, 0.75f); // Transparent dark background
+        Button pauseButton = pauseGO.AddComponent<Button>();
+
+        RectTransform pauseRect = pauseGO.GetComponent<RectTransform>();
+        pauseRect.anchorMin = new Vector2(0f, 1f);
+        pauseRect.anchorMax = new Vector2(0f, 1f);
+        pauseRect.pivot = new Vector2(0f, 1f);
+        pauseRect.anchoredPosition = new Vector2(50f, -60f);
+        pauseRect.sizeDelta = new Vector2(110f, 110f);
+
+        GameObject pauseTextGO = new GameObject("Text");
+        pauseTextGO.transform.SetParent(pauseGO.transform, false);
+        TextMeshProUGUI pauseText = pauseTextGO.AddComponent<TextMeshProUGUI>();
+        pauseText.fontSize = 44;
+        pauseText.text = "||";
+        pauseText.color = Color.white;
+        pauseText.alignment = TextAlignmentOptions.Center;
+        RectTransform pauseTextRect = pauseTextGO.GetComponent<RectTransform>();
+        pauseTextRect.anchorMin = Vector2.zero;
+        pauseTextRect.anchorMax = Vector2.one;
+        pauseTextRect.sizeDelta = Vector2.zero;
+
+        // Rebuild 2. Center Scores Container
+        GameObject centerScoresGO = new GameObject("CenterScoreContainer");
+        centerScoresGO.transform.SetParent(canvas.transform, false);
+        RectTransform centerScoresRect = centerScoresGO.AddComponent<RectTransform>();
+        centerScoresRect.anchorMin = new Vector2(0.5f, 1f);
+        centerScoresRect.anchorMax = new Vector2(0.5f, 1f);
+        centerScoresRect.pivot = new Vector2(0.5f, 1f);
+        centerScoresRect.anchoredPosition = new Vector2(0f, -40f);
+        centerScoresRect.sizeDelta = new Vector2(500f, 220f);
+
+        // Best Score Title row (Crown + BEST)
+        GameObject bestTitleGO = new GameObject("BestTitleText");
+        bestTitleGO.transform.SetParent(centerScoresGO.transform, false);
+        TextMeshProUGUI bestTitle = bestTitleGO.AddComponent<TextMeshProUGUI>();
+        bestTitle.fontSize = 24;
+        bestTitle.text = "<sprite name=\"emoji_events\"> BEST";
+        bestTitle.color = new Color(1f, 0.84f, 0f); // Bright Gold/Yellow
+        bestTitle.alignment = TextAlignmentOptions.Center;
+        RectTransform bestTitleRect = bestTitleGO.GetComponent<RectTransform>();
+        bestTitleRect.anchorMin = new Vector2(0.5f, 1f);
+        bestTitleRect.anchorMax = new Vector2(0.5f, 1f);
+        bestTitleRect.pivot = new Vector2(0.5f, 1f);
+        bestTitleRect.anchoredPosition = new Vector2(0f, 0f);
+        bestTitleRect.sizeDelta = new Vector2(400f, 35f);
+
+        // Best Score Value (Gold text)
+        GameObject bestScoreGO = new GameObject("BestScoreText");
+        bestScoreGO.transform.SetParent(centerScoresGO.transform, false);
+        TextMeshProUGUI bestScoreText = bestScoreGO.AddComponent<TextMeshProUGUI>();
+        bestScoreText.fontSize = 44;
+        bestScoreText.fontStyle = FontStyles.Bold;
+        bestScoreText.text = "0";
+        bestScoreText.color = Color.white;
+        bestScoreText.alignment = TextAlignmentOptions.Center;
+        RectTransform bestScoreRect = bestScoreGO.GetComponent<RectTransform>();
+        bestScoreRect.anchorMin = new Vector2(0.5f, 1f);
+        bestScoreRect.anchorMax = new Vector2(0.5f, 1f);
+        bestScoreRect.pivot = new Vector2(0.5f, 1f);
+        bestScoreRect.anchoredPosition = new Vector2(0f, -30f);
+        bestScoreRect.sizeDelta = new Vector2(400f, 50f);
+
+        // Current Score Value (Huge white text)
+        GameObject scoreGO = new GameObject("ScoreText");
+        scoreGO.transform.SetParent(centerScoresGO.transform, false);
+        TextMeshProUGUI scoreText = scoreGO.AddComponent<TextMeshProUGUI>();
+        scoreText.fontSize = 94;
+        scoreText.fontStyle = FontStyles.Bold;
+        scoreText.text = "0";
+        scoreText.color = Color.white;
+        scoreText.alignment = TextAlignmentOptions.Center;
+        RectTransform scoreRect = scoreGO.GetComponent<RectTransform>();
+        scoreRect.anchorMin = new Vector2(0.5f, 1f);
+        scoreRect.anchorMax = new Vector2(0.5f, 1f);
+        scoreRect.pivot = new Vector2(0.5f, 1f);
+        scoreRect.anchoredPosition = new Vector2(0f, -110f);
+        scoreRect.sizeDelta = new Vector2(480f, 110f);
+
+        // Rebuild 3. Gold Coin Bar (Top Right)
+        GameObject goldBarGO = new GameObject("GoldBarPanel");
+        goldBarGO.transform.SetParent(canvas.transform, false);
+        Image goldBarImg = goldBarGO.AddComponent<Image>();
+        goldBarImg.color = new Color(0.07f, 0.06f, 0.11f, 0.75f); // Semi-transparent container background
+
+        RectTransform goldBarRect = goldBarGO.GetComponent<RectTransform>();
+        goldBarRect.anchorMin = new Vector2(1f, 1f);
+        goldBarRect.anchorMax = new Vector2(1f, 1f);
+        goldBarRect.pivot = new Vector2(1f, 1f);
+        goldBarRect.anchoredPosition = new Vector2(-50f, -60f);
+        goldBarRect.sizeDelta = new Vector2(340f, 90f);
+
+        // Inner Coin Circle
+        GameObject coinIconGO = new GameObject("CoinIcon");
+        coinIconGO.transform.SetParent(goldBarGO.transform, false);
+        Image coinImg = coinIconGO.AddComponent<Image>();
+        coinImg.color = new Color(1f, 0.73f, 0f); // Gold Yellow fill
+        RectTransform coinIconRect = coinIconGO.GetComponent<RectTransform>();
+        coinIconRect.anchorMin = new Vector2(0f, 0.5f);
+        coinIconRect.anchorMax = new Vector2(0f, 0.5f);
+        coinIconRect.pivot = new Vector2(0f, 0.5f);
+        coinIconRect.anchoredPosition = new Vector2(8f, 0f);
+        coinIconRect.sizeDelta = new Vector2(74f, 74f);
+
+        // Coin Icon symbol ($ sign)
+        GameObject coinSymbolGO = new GameObject("Symbol");
+        coinSymbolGO.transform.SetParent(coinIconGO.transform, false);
+        TextMeshProUGUI coinSym = coinSymbolGO.AddComponent<TextMeshProUGUI>();
+        coinSym.fontSize = 42;
+        coinSym.fontStyle = FontStyles.Bold;
+        coinSym.text = "$";
+        coinSym.color = Color.white;
+        coinSym.alignment = TextAlignmentOptions.Center;
+        RectTransform coinSymRect = coinSymbolGO.GetComponent<RectTransform>();
+        coinSymRect.anchorMin = Vector2.zero;
+        coinSymRect.anchorMax = Vector2.one;
+        coinSymRect.sizeDelta = Vector2.zero;
+
+        // Gold Amount Text
+        GameObject goldAmountGO = new GameObject("GoldAmountText");
+        goldAmountGO.transform.SetParent(goldBarGO.transform, false);
+        TextMeshProUGUI goldText = goldAmountGO.AddComponent<TextMeshProUGUI>();
+        goldText.fontSize = 34;
+        goldText.text = "12,450";
+        goldText.color = Color.white;
+        goldText.alignment = TextAlignmentOptions.Center;
+        RectTransform goldAmountRect = goldAmountGO.GetComponent<RectTransform>();
+        goldAmountRect.anchorMin = new Vector2(0.24f, 0f);
+        goldAmountRect.anchorMax = new Vector2(0.76f, 1f);
+        goldAmountRect.offsetMin = Vector2.zero;
+        goldAmountRect.offsetMax = Vector2.zero;
+
+        // Gold Add Plus Button (Rightmost inside container)
+        GameObject addGoldGO = new GameObject("AddGoldButton");
+        addGoldGO.transform.SetParent(goldBarGO.transform, false);
+        Image addGoldImg = addGoldGO.AddComponent<Image>();
+        addGoldImg.color = new Color(0.05f, 0.55f, 0.36f); // Slick emerald green button
+        Button addGoldBtn = addGoldGO.AddComponent<Button>();
+        RectTransform addGoldRect = addGoldGO.GetComponent<RectTransform>();
+        addGoldRect.anchorMin = new Vector2(1f, 0.5f);
+        addGoldRect.anchorMax = new Vector2(1f, 0.5f);
+        addGoldRect.pivot = new Vector2(1f, 0.5f);
+        addGoldRect.anchoredPosition = new Vector2(-8f, 0f);
+        addGoldRect.sizeDelta = new Vector2(70f, 70f);
+
+        GameObject addGoldPlusGO = new GameObject("Plus");
+        addGoldPlusGO.transform.SetParent(addGoldGO.transform, false);
+        TextMeshProUGUI plusText = addGoldPlusGO.AddComponent<TextMeshProUGUI>();
+        plusText.fontSize = 40;
+        plusText.text = "+";
+        plusText.color = Color.white;
+        plusText.alignment = TextAlignmentOptions.Center;
+        RectTransform plusTextRect = addGoldPlusGO.GetComponent<RectTransform>();
+        plusTextRect.anchorMin = Vector2.zero;
+        plusTextRect.anchorMax = Vector2.one;
+        plusTextRect.sizeDelta = Vector2.zero;
+
+        // Rebuild 4. Circular Timer (Far Right under Top Row)
+        GameObject timerCircleGO = new GameObject("TimerCircleContainer");
+        timerCircleGO.transform.SetParent(canvas.transform, false);
+        RectTransform timerCircleRect = timerCircleGO.AddComponent<RectTransform>();
+        timerCircleRect.anchorMin = new Vector2(1f, 1f);
+        timerCircleRect.anchorMax = new Vector2(1f, 1f);
+        timerCircleRect.pivot = new Vector2(1f, 1f);
+        timerCircleRect.anchoredPosition = new Vector2(-50f, -195f);
+        timerCircleRect.sizeDelta = new Vector2(160f, 160f);
+
+        // Circular background track (a very thin low-alpha ring as backdrop)
+        GameObject timerTrackGO = new GameObject("Track");
+        timerTrackGO.transform.SetParent(timerCircleGO.transform, false);
+        Image trackImg = timerTrackGO.AddComponent<Image>();
+        trackImg.color = new Color(0.12f, 0.08f, 0.22f, 0.35f); // Low alpha purple outline track
+        Sprite timerPngSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/timer.png");
+        if (timerPngSprite != null) trackImg.sprite = timerPngSprite;
+        else if (circleSprite != null) trackImg.sprite = circleSprite;
+        RectTransform timerTrackRect = timerTrackGO.GetComponent<RectTransform>();
+        timerTrackRect.anchorMin = Vector2.zero;
+        timerTrackRect.anchorMax = Vector2.one;
+        timerTrackRect.sizeDelta = Vector2.zero;
+
+        // Circular filled progress ring (Fades/depletes dynamically)
+        GameObject timerRingGO = new GameObject("ProgressRing");
+        timerRingGO.transform.SetParent(timerCircleGO.transform, false);
+        Image timerProgressCircle = timerRingGO.AddComponent<Image>();
+        timerProgressCircle.color = Color.white; // Keep white to let the baked neon gradient show through
+        if (timerPngSprite != null) timerProgressCircle.sprite = timerPngSprite;
+        else if (circleSprite != null) timerProgressCircle.sprite = circleSprite;
+        timerProgressCircle.type = Image.Type.Filled;
+        timerProgressCircle.fillMethod = Image.FillMethod.Radial360;
+        timerProgressCircle.fillOrigin = (int)Image.Origin360.Top;
+        timerProgressCircle.fillAmount = 1f;
+        RectTransform timerRingRect = timerRingGO.GetComponent<RectTransform>();
+        timerRingRect.anchorMin = new Vector2(0.05f, 0.05f);
+        timerRingRect.anchorMax = new Vector2(0.95f, 0.95f);
+        timerRingRect.sizeDelta = Vector2.zero;
+
+
+
+        // Inside layout (TIME header & countdown value)
+        GameObject timeHeaderGO = new GameObject("TimeHeader");
+        timeHeaderGO.transform.SetParent(timerCircleGO.transform, false);
+        TextMeshProUGUI timeHeader = timeHeaderGO.AddComponent<TextMeshProUGUI>();
+        timeHeader.fontSize = 18;
+        timeHeader.text = "TIME";
+        timeHeader.color = new Color(0.9f, 0.1f, 0.85f); // Pink header
+        timeHeader.alignment = TextAlignmentOptions.Center;
+        RectTransform timeHeaderRect = timeHeaderGO.GetComponent<RectTransform>();
+        timeHeaderRect.anchorMin = new Vector2(0.5f, 0.65f);
+        timeHeaderRect.anchorMax = new Vector2(0.5f, 0.65f);
+        timeHeaderRect.pivot = new Vector2(0.5f, 0.5f);
+        timeHeaderRect.sizeDelta = new Vector2(120f, 30f);
+
+        GameObject timerTextGO = new GameObject("TimerText");
+        timerTextGO.transform.SetParent(timerCircleGO.transform, false);
+        TextMeshProUGUI timerText = timerTextGO.AddComponent<TextMeshProUGUI>();
+        timerText.fontSize = 38;
+        timerText.fontStyle = FontStyles.Bold;
+        timerText.text = "<b>1:28</b>";
+        timerText.color = Color.white;
+        timerText.alignment = TextAlignmentOptions.Center;
+        timerText.overflowMode = TextOverflowModes.Overflow; // Prevent clip
+        RectTransform timerTextRect = timerTextGO.GetComponent<RectTransform>();
+        timerTextRect.anchorMin = new Vector2(0.5f, 0.4f);
+        timerTextRect.anchorMax = new Vector2(0.5f, 0.4f);
+        timerTextRect.pivot = new Vector2(0.5f, 0.5f);
+        timerTextRect.sizeDelta = new Vector2(120f, 40f);
 
         // Screen Flash Image
         Image flashImageComp = null;
-        Transform flashTransform = canvas.transform.Find("FlashScreenImage");
-        if (flashTransform == null)
-        {
-            GameObject flashGO = new GameObject("FlashScreenImage");
-            flashGO.transform.SetParent(canvas.transform, false);
-            flashImageComp = flashGO.AddComponent<Image>();
-            flashImageComp.color = Color.clear;
-            flashImageComp.raycastTarget = false;
+        GameObject flashGO = new GameObject("FlashScreenImage");
+        flashGO.transform.SetParent(canvas.transform, false);
+        flashImageComp = flashGO.AddComponent<Image>();
+        flashImageComp.color = Color.clear;
+        flashImageComp.raycastTarget = false;
+        RectTransform flashRect = flashGO.GetComponent<RectTransform>();
+        flashRect.anchorMin = Vector2.zero;
+        flashRect.anchorMax = Vector2.one;
+        flashRect.sizeDelta = Vector2.zero;
 
-            RectTransform rect = flashGO.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.sizeDelta = Vector2.zero;
-        }
-        else
-        {
-            flashImageComp = flashTransform.GetComponent<Image>();
-        }
+        // Combo Feedback Panel (Center)
+        GameObject comboContainer = new GameObject("ComboContainer");
+        comboContainer.transform.SetParent(canvas.transform, false);
+        RectTransform comboContainerRect = comboContainer.AddComponent<RectTransform>();
+        comboContainerRect.anchorMin = new Vector2(0.5f, 0.5f);
+        comboContainerRect.anchorMax = new Vector2(0.5f, 0.5f);
+        comboContainerRect.pivot = new Vector2(0.5f, 0.5f);
+        comboContainerRect.anchoredPosition = new Vector2(0f, 100f);
+        comboContainerRect.sizeDelta = new Vector2(600f, 250f);
 
-        // Combo Feedback Text
-        TextMeshProUGUI comboFeedbackText = null;
-        Transform comboTransform = canvas.transform.Find("ComboFeedbackText");
-        if (comboTransform == null)
-        {
-            GameObject comboGO = new GameObject("ComboFeedbackText");
-            comboGO.transform.SetParent(canvas.transform, false);
-            comboFeedbackText = comboGO.AddComponent<TextMeshProUGUI>();
-            comboFeedbackText.fontSize = 80;
-            comboFeedbackText.text = "COMBO!";
-            comboFeedbackText.color = Color.yellow;
-            comboFeedbackText.alignment = TextAlignmentOptions.Center;
-            comboFeedbackText.gameObject.SetActive(false);
+        GameObject comboTitleGO = new GameObject("ComboTitleText");
+        comboTitleGO.transform.SetParent(comboContainer.transform, false);
+        RectTransform comboTitleRect = comboTitleGO.AddComponent<RectTransform>();
+        TextMeshProUGUI comboTitleText = comboTitleGO.AddComponent<TextMeshProUGUI>();
+        comboTitleText.fontSize = 38;
+        comboTitleText.text = "COMBO";
+        comboTitleText.color = new Color(1f, 0.64f, 0f);
+        comboTitleText.alignment = TextAlignmentOptions.Center;
+        comboTitleText.enableWordWrapping = false;
+        comboTitleRect.anchorMin = new Vector2(0.5f, 0.8f);
+        comboTitleRect.anchorMax = new Vector2(0.5f, 0.8f);
+        comboTitleRect.pivot = new Vector2(0.5f, 0.5f);
+        comboTitleRect.sizeDelta = new Vector2(500f, 50f);
 
-            RectTransform rect = comboGO.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, 300f);
-            rect.sizeDelta = new Vector2(800f, 200f);
-        }
-        else
-        {
-            comboFeedbackText = comboTransform.GetComponent<TextMeshProUGUI>();
-        }
+        GameObject comboMultiplierGO = new GameObject("ComboMultiplierText");
+        comboMultiplierGO.transform.SetParent(comboContainer.transform, false);
+        RectTransform comboMultRect = comboMultiplierGO.AddComponent<RectTransform>();
+        TextMeshProUGUI comboMultiplierText = comboMultiplierGO.AddComponent<TextMeshProUGUI>();
+        comboMultiplierText.fontSize = 86;
+        comboMultiplierText.fontStyle = FontStyles.Bold | FontStyles.Italic;
+        comboMultiplierText.text = "x4";
+        comboMultiplierText.color = new Color(1f, 0.84f, 0f);
+        comboMultiplierText.alignment = TextAlignmentOptions.Center;
+        comboMultiplierText.enableWordWrapping = false;
+        comboMultiplierText.enableAutoSizing = true;
+        comboMultiplierText.fontSizeMin = 24;
+        comboMultiplierText.fontSizeMax = 86;
+        comboMultRect.anchorMin = new Vector2(0.5f, 0.45f);
+        comboMultRect.anchorMax = new Vector2(0.5f, 0.45f);
+        comboMultRect.pivot = new Vector2(0.5f, 0.5f);
+        comboMultRect.sizeDelta = new Vector2(500f, 100f);
+
+        GameObject comboChainGO = new GameObject("ComboChainText");
+        comboChainGO.transform.SetParent(comboContainer.transform, false);
+        RectTransform comboChainRect = comboChainGO.AddComponent<RectTransform>();
+        TextMeshProUGUI comboChainText = comboChainGO.AddComponent<TextMeshProUGUI>();
+        comboChainText.fontSize = 28;
+        comboChainText.text = "12 CHAIN!";
+        comboChainText.color = new Color(0.4f, 0.95f, 1f);
+        comboChainText.alignment = TextAlignmentOptions.Center;
+        comboChainText.enableWordWrapping = false;
+        comboChainRect.anchorMin = new Vector2(0.5f, 0.15f);
+        comboChainRect.anchorMax = new Vector2(0.5f, 0.15f);
+        comboChainRect.pivot = new Vector2(0.5f, 0.5f);
+        comboChainRect.sizeDelta = new Vector2(500f, 40f);
+
+        comboContainer.SetActive(false);
+
+        // Danger Zone Banner (Danger Strip)
+        GameObject dangerBanner = new GameObject("DangerZoneBanner");
+        dangerBanner.transform.SetParent(canvas.transform, false);
+        Image dangerImg = dangerBanner.AddComponent<Image>();
+        dangerImg.color = new Color(0.85f, 0.05f, 0.05f, 0.85f); // Red Banner Alert
+        RectTransform dangerBannerRect = dangerBanner.GetComponent<RectTransform>();
+        dangerBannerRect.anchorMin = new Vector2(0f, 0.35f);
+        dangerBannerRect.anchorMax = new Vector2(1f, 0.35f);
+        dangerBannerRect.pivot = new Vector2(0.5f, 0.5f);
+        dangerBannerRect.anchoredPosition = new Vector2(0f, 0f);
+        dangerBannerRect.sizeDelta = new Vector2(0f, 90f);
+
+        GameObject dangerTextGO = new GameObject("DangerText");
+        dangerTextGO.transform.SetParent(dangerBanner.transform, false);
+        TextMeshProUGUI dangerText = dangerTextGO.AddComponent<TextMeshProUGUI>();
+        dangerText.fontSize = 38;
+        dangerText.fontStyle = FontStyles.Bold;
+        dangerText.text = "▲ DANGER ZONE ▲";
+        dangerText.color = Color.white;
+        dangerText.alignment = TextAlignmentOptions.Center;
+        RectTransform dangerTextRect = dangerTextGO.GetComponent<RectTransform>();
+        dangerTextRect.anchorMin = Vector2.zero;
+        dangerTextRect.anchorMax = Vector2.one;
+        dangerTextRect.sizeDelta = Vector2.zero;
+
+        dangerBanner.SetActive(false);
+
+        // Rebuild 5. Fever Panel (Left Side under Pause)
+        GameObject feverPanel = new GameObject("FeverPanelContainer");
+        feverPanel.transform.SetParent(canvas.transform, false);
+        RectTransform feverPanelRect = feverPanel.AddComponent<RectTransform>();
+        feverPanelRect.anchorMin = new Vector2(0f, 1f);
+        feverPanelRect.anchorMax = new Vector2(0f, 1f);
+        feverPanelRect.pivot = new Vector2(0f, 1f);
+        feverPanelRect.anchoredPosition = new Vector2(50f, -195f);
+        feverPanelRect.sizeDelta = new Vector2(160f, 220f);
+
+        // Fever circle/glow back
+        GameObject feverIconGO = new GameObject("FeverIconBack");
+        feverIconGO.transform.SetParent(feverPanel.transform, false);
+        Image feverImgComp = feverIconGO.AddComponent<Image>();
+        feverImgComp.color = Color.white; // Render bolt.png as-is
+        Sprite boltPngSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Textures/bolt.png");
+        if (boltPngSprite != null) feverImgComp.sprite = boltPngSprite;
+        else if (circleSprite != null) feverImgComp.sprite = circleSprite;
+        RectTransform feverIconRect = feverIconGO.GetComponent<RectTransform>();
+        feverIconRect.anchorMin = new Vector2(0.5f, 0.65f);
+        feverIconRect.anchorMax = new Vector2(0.5f, 0.65f);
+        feverIconRect.pivot = new Vector2(0.5f, 0.5f);
+        feverIconRect.sizeDelta = new Vector2(110f, 110f);
+
+        // Fever subtitle
+        GameObject feverTitleGO = new GameObject("FeverText");
+        feverTitleGO.transform.SetParent(feverPanel.transform, false);
+        TextMeshProUGUI feverTitle = feverTitleGO.AddComponent<TextMeshProUGUI>();
+        feverTitle.fontSize = 22;
+        feverTitle.fontStyle = FontStyles.Bold | FontStyles.Italic;
+        feverTitle.text = "FEVER";
+        feverTitle.color = new Color(1f, 0.25f, 0.85f); // Pink/Fuchsia matching the guide
+        feverTitle.alignment = TextAlignmentOptions.Center;
+        RectTransform feverTitleRect = feverTitleGO.GetComponent<RectTransform>();
+        feverTitleRect.anchorMin = new Vector2(0.5f, 0.26f);
+        feverTitleRect.anchorMax = new Vector2(0.5f, 0.26f);
+        feverTitleRect.pivot = new Vector2(0.5f, 0.5f);
+        feverTitleRect.sizeDelta = new Vector2(160f, 35f);
+
+        // Fever horizontal progress bar
+        GameObject feverTrackGO = new GameObject("ProgressBarTrack");
+        feverTrackGO.transform.SetParent(feverPanel.transform, false);
+        Image fTrackImg = feverTrackGO.AddComponent<Image>();
+        fTrackImg.color = new Color(0.08f, 0.07f, 0.12f, 0.9f);
+        if (circleSprite != null) fTrackImg.sprite = circleSprite; // soft boundaries
+        RectTransform fTrackRect = feverTrackGO.GetComponent<RectTransform>();
+        fTrackRect.anchorMin = new Vector2(0.05f, 0.05f);
+        fTrackRect.anchorMax = new Vector2(0.95f, 0.05f);
+        fTrackRect.pivot = new Vector2(0.5f, 0.5f);
+        fTrackRect.anchoredPosition = new Vector2(0f, 0f);
+        fTrackRect.sizeDelta = new Vector2(0f, 20f);
+
+        GameObject feverBarGO = new GameObject("ProgressBarFill");
+        feverBarGO.transform.SetParent(feverTrackGO.transform, false);
+        Image feverProgressBar = feverBarGO.AddComponent<Image>();
+        feverProgressBar.color = new Color(1f, 0.25f, 0.85f); // Gradient Pink/Fuchsia
+        if (circleSprite != null) feverProgressBar.sprite = circleSprite;
+        feverProgressBar.type = Image.Type.Filled;
+        feverProgressBar.fillMethod = Image.FillMethod.Horizontal;
+        feverProgressBar.fillAmount = 0f;
+        RectTransform feverBarRect = feverBarGO.GetComponent<RectTransform>();
+        feverBarRect.anchorMin = Vector2.zero;
+        feverBarRect.anchorMax = Vector2.one;
+        feverBarRect.sizeDelta = Vector2.zero;
+        feverBarRect.sizeDelta = Vector2.zero;
+
+        feverPanel.SetActive(true);
+
+        // Bottom HUD Card 1: Goal
+        GameObject goalCardGO = new GameObject("GoalHUDCard");
+        goalCardGO.transform.SetParent(canvas.transform, false);
+        Image goalCardImg = goalCardGO.AddComponent<Image>();
+        goalCardImg.color = new Color(0.07f, 0.06f, 0.11f, 0.75f);
+        RectTransform goalCardRect = goalCardGO.GetComponent<RectTransform>();
+        goalCardRect.anchorMin = new Vector2(0.12f, 0.04f);
+        goalCardRect.anchorMax = new Vector2(0.45f, 0.04f);
+        goalCardRect.pivot = new Vector2(0.5f, 0f);
+        goalCardRect.anchoredPosition = new Vector2(0f, 0f);
+        goalCardRect.sizeDelta = new Vector2(0f, 130f);
+
+        GameObject goalHeaderGO = new GameObject("Header");
+        goalHeaderGO.transform.SetParent(goalCardGO.transform, false);
+        TextMeshProUGUI goalHeader = goalHeaderGO.AddComponent<TextMeshProUGUI>();
+        goalHeader.fontSize = 24;
+        goalHeader.text = "HEDEF";
+        goalHeader.color = new Color(231f / 255f, 223f / 255f, 240f / 255f, 0.45f);
+        goalHeader.alignment = TextAlignmentOptions.Center;
+        RectTransform goalHeaderRect = goalHeaderGO.GetComponent<RectTransform>();
+        goalHeaderRect.anchorMin = new Vector2(0.5f, 0.75f);
+        goalHeaderRect.anchorMax = new Vector2(0.5f, 0.75f);
+        goalHeaderRect.pivot = new Vector2(0.5f, 0.5f);
+        goalHeaderRect.sizeDelta = new Vector2(300f, 40f);
+
+        GameObject goalTextGO = new GameObject("GoalText");
+        goalTextGO.transform.SetParent(goalCardGO.transform, false);
+        TextMeshProUGUI goalText = goalTextGO.AddComponent<TextMeshProUGUI>();
+        goalText.fontSize = 44;
+        goalText.fontStyle = FontStyles.Bold;
+        goalText.text = "HEDEF: 1,000";
+        goalText.color = new Color(1f, 0.62f, 0f); // Goal Neon Orange
+        goalText.alignment = TextAlignmentOptions.Center;
+        RectTransform goalTextRect = goalTextGO.GetComponent<RectTransform>();
+        goalTextRect.anchorMin = new Vector2(0.5f, 0.35f);
+        goalTextRect.anchorMax = new Vector2(0.5f, 0.35f);
+        goalTextRect.pivot = new Vector2(0.5f, 0.5f);
+        goalTextRect.sizeDelta = new Vector2(300f, 60f);
+
+        // Bottom HUD Card 2: Level
+        GameObject levelCardGO = new GameObject("LevelHUDCard");
+        levelCardGO.transform.SetParent(canvas.transform, false);
+        Image levelCardImg = levelCardGO.AddComponent<Image>();
+        levelCardImg.color = new Color(0.07f, 0.06f, 0.11f, 0.75f);
+        RectTransform levelCardRect = levelCardGO.GetComponent<RectTransform>();
+        levelCardRect.anchorMin = new Vector2(0.55f, 0.04f);
+        levelCardRect.anchorMax = new Vector2(0.88f, 0.04f);
+        levelCardRect.pivot = new Vector2(0.5f, 0f);
+        levelCardRect.anchoredPosition = new Vector2(0f, 0f);
+        levelCardRect.sizeDelta = new Vector2(0f, 130f);
+
+        GameObject levelHeaderGO = new GameObject("Header");
+        levelHeaderGO.transform.SetParent(levelCardGO.transform, false);
+        TextMeshProUGUI levelHeader = levelHeaderGO.AddComponent<TextMeshProUGUI>();
+        levelHeader.fontSize = 24;
+        levelHeader.text = "LVL";
+        levelHeader.color = new Color(231f / 255f, 223f / 255f, 240f / 255f, 0.45f);
+        levelHeader.alignment = TextAlignmentOptions.Center;
+        RectTransform levelHeaderRect = levelHeaderGO.GetComponent<RectTransform>();
+        levelHeaderRect.anchorMin = new Vector2(0.5f, 0.75f);
+        levelHeaderRect.anchorMax = new Vector2(0.5f, 0.75f);
+        levelHeaderRect.pivot = new Vector2(0.5f, 0.5f);
+        levelHeaderRect.sizeDelta = new Vector2(300f, 40f);
+
+        GameObject levelTextGO = new GameObject("LevelText");
+        levelTextGO.transform.SetParent(levelCardGO.transform, false);
+        TextMeshProUGUI levelText = levelTextGO.AddComponent<TextMeshProUGUI>();
+        levelText.fontSize = 44;
+        levelText.fontStyle = FontStyles.Bold;
+        levelText.text = "SEVİYE: 1";
+        levelText.color = new Color(0f, 0.96f, 1f); // Level neon cyan
+        levelText.alignment = TextAlignmentOptions.Center;
+        RectTransform levelTextRect = levelTextGO.GetComponent<RectTransform>();
+        levelTextRect.anchorMin = new Vector2(0.5f, 0.35f);
+        levelTextRect.anchorMax = new Vector2(0.5f, 0.35f);
+        levelTextRect.pivot = new Vector2(0.5f, 0.5f);
+        levelTextRect.sizeDelta = new Vector2(300f, 60f);
 
         // GameOver Panel
         GameObject gameOverPanel = null;
-        Transform panelTransform = canvas.transform.Find("GameOverPanel");
-        if (panelTransform != null)
-        {
-            Object.DestroyImmediate(panelTransform.gameObject);
-        }
-
         gameOverPanel = new GameObject("GameOverPanel");
         gameOverPanel.transform.SetParent(canvas.transform, false);
 
@@ -786,119 +1271,183 @@ public class GameSetup
         GameObject hsTextGO = new GameObject("HighScoreTextVal");
         hsTextGO.transform.SetParent(gameOverPanel.transform, false);
         TextMeshProUGUI hsText = hsTextGO.AddComponent<TextMeshProUGUI>();
-        hsText.fontSize = 42;
-        hsText.fontStyle = FontStyles.Bold | FontStyles.Italic;
-        hsText.text = "HIGH SCORE: 0";
-        hsText.color = new Color(1f, 0.84f, 0f); // Gold
+        hsText.fontSize = 46;
+        hsText.text = "EN YÜKSEK SKOR: 12,450";
+        hsText.color = Color.white;
         hsText.alignment = TextAlignmentOptions.Center;
 
         RectTransform hsRect = hsTextGO.GetComponent<RectTransform>();
         hsRect.anchorMin = new Vector2(0.5f, 0.5f);
         hsRect.anchorMax = new Vector2(0.5f, 0.5f);
         hsRect.pivot = new Vector2(0.5f, 0.5f);
-        hsRect.anchoredPosition = new Vector2(0f, 190f);
+        hsRect.anchoredPosition = new Vector2(0f, 180f);
         hsRect.sizeDelta = new Vector2(800f, 80f);
 
-        // 3. Final Score Text
-        GameObject scoreTextValGO = new GameObject("ScoreTextVal");
-        scoreTextValGO.transform.SetParent(gameOverPanel.transform, false);
-        TextMeshProUGUI scoreTextVal = scoreTextValGO.AddComponent<TextMeshProUGUI>();
-        scoreTextVal.fontSize = 56;
+        // 3. Final score label
+        GameObject fsTextGO = new GameObject("FinalScoreLabelText");
+        fsTextGO.transform.SetParent(gameOverPanel.transform, false);
+        TextMeshProUGUI fsLabelText = fsTextGO.AddComponent<TextMeshProUGUI>();
+        fsLabelText.fontSize = 32;
+        fsLabelText.text = "ALINAN SKOR";
+        fsLabelText.color = new Color(0.6f, 0.6f, 0.7f);
+        fsLabelText.alignment = TextAlignmentOptions.Center;
+
+        RectTransform fsLabelRect = fsTextGO.GetComponent<RectTransform>();
+        fsLabelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        fsLabelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        fsLabelRect.pivot = new Vector2(0.5f, 0.5f);
+        fsLabelRect.anchoredPosition = new Vector2(0f, 60f);
+        fsLabelRect.sizeDelta = new Vector2(800f, 50f);
+
+        // 4. Final score value
+        GameObject fsValTextGO = new GameObject("ScoreTextVal");
+        fsValTextGO.transform.SetParent(gameOverPanel.transform, false);
+        TextMeshProUGUI scoreTextVal = fsValTextGO.AddComponent<TextMeshProUGUI>();
+        scoreTextVal.fontSize = 94;
         scoreTextVal.fontStyle = FontStyles.Bold;
-        scoreTextVal.text = "SCORE: 0";
+        scoreTextVal.text = "4,210";
         scoreTextVal.color = Color.white;
         scoreTextVal.alignment = TextAlignmentOptions.Center;
 
-        RectTransform scoreTextValRect = scoreTextValGO.GetComponent<RectTransform>();
-        scoreTextValRect.anchorMin = new Vector2(0.5f, 0.5f);
-        scoreTextValRect.anchorMax = new Vector2(0.5f, 0.5f);
-        scoreTextValRect.pivot = new Vector2(0.5f, 0.5f);
-        scoreTextValRect.anchoredPosition = new Vector2(0f, 90f);
-        scoreTextValRect.sizeDelta = new Vector2(800f, 90f);
+        RectTransform fsValRect = fsValTextGO.GetComponent<RectTransform>();
+        fsValRect.anchorMin = new Vector2(0.5f, 0.5f);
+        fsValRect.anchorMax = new Vector2(0.5f, 0.5f);
+        fsValRect.pivot = new Vector2(0.5f, 0.5f);
+        fsValRect.anchoredPosition = new Vector2(0f, -20f);
+        fsValRect.sizeDelta = new Vector2(800f, 120f);
 
-        // 4. Best Combo Text
-        GameObject bestComboTextValGO = new GameObject("BestComboTextVal");
-        bestComboTextValGO.transform.SetParent(gameOverPanel.transform, false);
-        TextMeshProUGUI bestComboTextVal = bestComboTextValGO.AddComponent<TextMeshProUGUI>();
-        bestComboTextVal.fontSize = 44;
-        bestComboTextVal.fontStyle = FontStyles.Italic;
-        bestComboTextVal.text = "BEST COMBO: 0 DOT";
-        bestComboTextVal.color = new Color(0.49f, 0.96f, 1f); // Cyan
-        bestComboTextVal.alignment = TextAlignmentOptions.Center;
+        // 5. Improvement progress label
+        GameObject impTextGO = new GameObject("ImprovementTextVal");
+        impTextGO.transform.SetParent(gameOverPanel.transform, false);
+        TextMeshProUGUI impText = impTextGO.AddComponent<TextMeshProUGUI>();
+        impText.fontSize = 32;
+        impText.text = "+150 (SKORUNU GELİŞTİRDİN!)";
+        impText.color = new Color(0.1f, 0.9f, 0.5f); // Neon green
+        impText.alignment = TextAlignmentOptions.Center;
 
-        RectTransform bestComboRect = bestComboTextValGO.GetComponent<RectTransform>();
-        bestComboRect.anchorMin = new Vector2(0.5f, 0.5f);
-        bestComboRect.anchorMax = new Vector2(0.5f, 0.5f);
-        bestComboRect.pivot = new Vector2(0.5f, 0.5f);
-        bestComboRect.anchoredPosition = new Vector2(0f, 0f);
-        bestComboRect.sizeDelta = new Vector2(800f, 80f);
-
-        // 5. Performance Improvement Percentage Text
-        GameObject impTextValGO = new GameObject("ImprovementTextVal");
-        impTextValGO.transform.SetParent(gameOverPanel.transform, false);
-        TextMeshProUGUI impTextVal = impTextValGO.AddComponent<TextMeshProUGUI>();
-        impTextVal.fontSize = 38;
-        impTextVal.fontStyle = FontStyles.Bold;
-        impTextVal.text = "+25% daha iyi oynadın!";
-        impTextVal.color = Color.green;
-        impTextVal.alignment = TextAlignmentOptions.Center;
-
-        RectTransform impRect = impTextValGO.GetComponent<RectTransform>();
+        RectTransform impRect = impTextGO.GetComponent<RectTransform>();
         impRect.anchorMin = new Vector2(0.5f, 0.5f);
         impRect.anchorMax = new Vector2(0.5f, 0.5f);
         impRect.pivot = new Vector2(0.5f, 0.5f);
-        impRect.anchoredPosition = new Vector2(0f, -90f);
-        impRect.sizeDelta = new Vector2(800f, 80f);
+        impRect.anchoredPosition = new Vector2(0f, -110f);
+        impRect.sizeDelta = new Vector2(800f, 60f);
 
         // 6. Restart Button
-        GameObject buttonGO = new GameObject("RestartButton");
-        buttonGO.transform.SetParent(gameOverPanel.transform, false);
-        Image btnImage = buttonGO.AddComponent<Image>();
-        btnImage.color = new Color(0.12f, 0.64f, 0.44f); // Slick emerald green
-        Button restartButton = buttonGO.AddComponent<Button>();
+        GameObject restartButtonGO = new GameObject("RestartButton");
+        restartButtonGO.transform.SetParent(gameOverPanel.transform, false);
+        Image restartBtnImg = restartButtonGO.AddComponent<Image>();
+        restartBtnImg.color = new Color(0.9f, 0.1f, 0.85f); // Slick Neon pink button
+        Button restartButton = restartButtonGO.AddComponent<Button>();
 
-        RectTransform btnRect = buttonGO.GetComponent<RectTransform>();
-        btnRect.anchorMin = new Vector2(0.5f, 0.5f);
-        btnRect.anchorMax = new Vector2(0.5f, 0.5f);
-        btnRect.pivot = new Vector2(0.5f, 0.5f);
-        btnRect.anchoredPosition = new Vector2(0f, -230f);
-        btnRect.sizeDelta = new Vector2(360f, 100f);
+        RectTransform restartRect = restartButtonGO.GetComponent<RectTransform>();
+        restartRect.anchorMin = new Vector2(0.5f, 0.5f);
+        restartRect.anchorMax = new Vector2(0.5f, 0.5f);
+        restartRect.pivot = new Vector2(0.5f, 0.5f);
+        restartRect.anchoredPosition = new Vector2(0f, -240f);
+        restartRect.sizeDelta = new Vector2(380f, 110f);
 
-        // Button Text
-        GameObject btnTextGO = new GameObject("Text");
-        btnTextGO.transform.SetParent(buttonGO.transform, false);
-        TextMeshProUGUI btnText = btnTextGO.AddComponent<TextMeshProUGUI>();
-        btnText.fontSize = 38;
-        btnText.fontStyle = FontStyles.Bold;
-        btnText.text = "TEKRAR OYNA";
-        btnText.color = Color.white;
-        btnText.alignment = TextAlignmentOptions.Center;
-
-        RectTransform btnTextRect = btnTextGO.GetComponent<RectTransform>();
-        btnTextRect.anchorMin = Vector2.zero;
-        btnTextRect.anchorMax = Vector2.one;
-        btnTextRect.sizeDelta = Vector2.zero;
+        GameObject restartTextGO = new GameObject("Text");
+        restartTextGO.transform.SetParent(restartButtonGO.transform, false);
+        TextMeshProUGUI restartText = restartTextGO.AddComponent<TextMeshProUGUI>();
+        restartText.fontSize = 40;
+        restartText.fontStyle = FontStyles.Bold;
+        restartText.text = "TEKRAR OYNA";
+        restartText.color = Color.white;
+        restartText.alignment = TextAlignmentOptions.Center;
+        RectTransform restartTextRect = restartTextGO.GetComponent<RectTransform>();
+        restartTextRect.anchorMin = Vector2.zero;
+        restartTextRect.anchorMax = Vector2.one;
+        restartTextRect.sizeDelta = Vector2.zero;
 
         gameOverPanel.SetActive(false);
+
+        // Level Up Overlay
+        GameObject levelUpOverlay = new GameObject("LevelUpOverlay");
+        levelUpOverlay.transform.SetParent(canvas.transform, false);
+        Image levelUpBg = levelUpOverlay.AddComponent<Image>();
+        levelUpBg.color = new Color(0.05f, 0.04f, 0.08f, 0.98f);
+        RectTransform levelUpOverlayRect = levelUpOverlay.GetComponent<RectTransform>();
+        levelUpOverlayRect.anchorMin = Vector2.zero;
+        levelUpOverlayRect.anchorMax = Vector2.one;
+        levelUpOverlayRect.sizeDelta = Vector2.zero;
+
+        GameObject levelUpTitleGO = new GameObject("LevelUpTitleText");
+        levelUpTitleGO.transform.SetParent(levelUpOverlay.transform, false);
+        TextMeshProUGUI levelUpTitle = levelUpTitleGO.AddComponent<TextMeshProUGUI>();
+        levelUpTitle.fontSize = 72;
+        levelUpTitle.fontStyle = FontStyles.Bold | FontStyles.Italic;
+        levelUpTitle.text = "SEVİYE ATLANDI!";
+        levelUpTitle.color = new Color(1f, 0.84f, 0f);
+        levelUpTitle.alignment = TextAlignmentOptions.Center;
+        RectTransform levelUpTitleRect = levelUpTitleGO.GetComponent<RectTransform>();
+        levelUpTitleRect.anchorMin = new Vector2(0.5f, 0.5f);
+        levelUpTitleRect.anchorMax = new Vector2(0.5f, 0.5f);
+        levelUpTitleRect.pivot = new Vector2(0.5f, 0.5f);
+        levelUpTitleRect.anchoredPosition = new Vector2(0f, 300f);
+        levelUpTitleRect.sizeDelta = new Vector2(800f, 100f);
+
+        GameObject unlockedLevelTextGO = new GameObject("UnlockedLevelText");
+        unlockedLevelTextGO.transform.SetParent(levelUpOverlay.transform, false);
+        TextMeshProUGUI unlockedLevelTitleText = unlockedLevelTextGO.AddComponent<TextMeshProUGUI>();
+        unlockedLevelTitleText.fontSize = 44;
+        unlockedLevelTitleText.text = "SEVİYE 2";
+        unlockedLevelTitleText.color = new Color(0f, 0.96f, 1f);
+        unlockedLevelTitleText.alignment = TextAlignmentOptions.Center;
+        RectTransform unlockedLevelRect = unlockedLevelTextGO.GetComponent<RectTransform>();
+        unlockedLevelRect.anchorMin = new Vector2(0.5f, 0.5f);
+        unlockedLevelRect.anchorMax = new Vector2(0.5f, 0.5f);
+        unlockedLevelRect.pivot = new Vector2(0.5f, 0.5f);
+        unlockedLevelRect.anchoredPosition = new Vector2(0f, 200f);
+        unlockedLevelRect.sizeDelta = new Vector2(800f, 60f);
+
+        GameObject levelPreviewGO = new GameObject("LevelPreviewText");
+        levelPreviewGO.transform.SetParent(levelUpOverlay.transform, false);
+        TextMeshProUGUI levelPreviewText = levelPreviewGO.AddComponent<TextMeshProUGUI>();
+        levelPreviewText.fontSize = 32;
+        levelPreviewText.text = "Preview Text";
+        levelPreviewText.color = Color.white;
+        levelPreviewText.alignment = TextAlignmentOptions.Center;
+        RectTransform levelPreviewRect = levelPreviewGO.GetComponent<RectTransform>();
+        levelPreviewRect.anchorMin = new Vector2(0.5f, 0.5f);
+        levelPreviewRect.anchorMax = new Vector2(0.5f, 0.5f);
+        levelPreviewRect.pivot = new Vector2(0.5f, 0.5f);
+        levelPreviewRect.anchoredPosition = new Vector2(0f, 0f);
+        levelPreviewRect.sizeDelta = new Vector2(800f, 180f);
+
+        GameObject continueButtonGO = new GameObject("ContinueButton");
+        continueButtonGO.transform.SetParent(levelUpOverlay.transform, false);
+        Image continueBtnImg = continueButtonGO.AddComponent<Image>();
+        continueBtnImg.color = new Color(0.05f, 0.55f, 0.36f);
+        Button levelUpContinueButton = continueButtonGO.AddComponent<Button>();
+        RectTransform continueBtnRect = continueButtonGO.GetComponent<RectTransform>();
+        continueBtnRect.anchorMin = new Vector2(0.5f, 0.5f);
+        continueBtnRect.anchorMax = new Vector2(0.5f, 0.5f);
+        continueBtnRect.pivot = new Vector2(0.5f, 0.5f);
+        continueBtnRect.anchoredPosition = new Vector2(0f, -220f);
+        continueBtnRect.sizeDelta = new Vector2(360f, 100f);
+
+        GameObject continueTextGO = new GameObject("Text");
+        continueTextGO.transform.SetParent(continueButtonGO.transform, false);
+        TextMeshProUGUI continueText = continueTextGO.AddComponent<TextMeshProUGUI>();
+        continueText.fontSize = 38;
+        continueText.fontStyle = FontStyles.Bold;
+        continueText.text = "DEVAM ET";
+        continueText.color = Color.white;
+        continueText.alignment = TextAlignmentOptions.Center;
+        RectTransform continueTextRect = continueTextGO.GetComponent<RectTransform>();
+        continueTextRect.anchorMin = Vector2.zero;
+        continueTextRect.anchorMax = Vector2.one;
+        continueTextRect.sizeDelta = Vector2.zero;
+
+        levelUpOverlay.SetActive(false);
 
         // 9. Setup Managers
         ScoreManager scoreManager = Object.FindAnyObjectByType<ScoreManager>();
         if (scoreManager == null)
         {
-            GameObject scoreManGO = new GameObject("ScoreManager");
-            scoreManager = scoreManGO.AddComponent<ScoreManager>();
+            GameObject smGO = new GameObject("ScoreManager");
+            scoreManager = smGO.AddComponent<ScoreManager>();
         }
-
-        ComboManager comboManager = Object.FindAnyObjectByType<ComboManager>();
-        if (comboManager == null)
-        {
-            GameObject comboManGO = new GameObject("ComboManager");
-            comboManager = comboManGO.AddComponent<ComboManager>();
-        }
-        
-        SerializedObject serializedCombo = new SerializedObject(comboManager);
-        serializedCombo.FindProperty("particlePrefab").objectReferenceValue = explosionPrefab;
-        serializedCombo.ApplyModifiedProperties();
 
         UIManager uiManager = Object.FindAnyObjectByType<UIManager>();
         if (uiManager == null)
@@ -907,43 +1456,37 @@ public class GameSetup
             uiManager = uiManGO.AddComponent<UIManager>();
         }
 
-        // Setup UI Document (UI Toolkit)
-        UnityEngine.UIElements.UIDocument uiDoc = uiManager.GetComponent<UnityEngine.UIElements.UIDocument>();
-        if (uiDoc == null)
+        // Clean up UI Document from UIManager if it exists
+        var uDocComp = uiManager.GetComponent<UnityEngine.UIElements.UIDocument>();
+        if (uDocComp != null)
         {
-            uiDoc = uiManager.gameObject.AddComponent<UnityEngine.UIElements.UIDocument>();
-        }
-        
-        // Setup Panel Settings
-        UnityEngine.UIElements.PanelSettings panelSettings = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.PanelSettings>("Assets/Game/UI/GamePanelSettings.asset");
-        if (panelSettings == null)
-        {
-            panelSettings = ScriptableObject.CreateInstance<UnityEngine.UIElements.PanelSettings>();
-            AssetDatabase.CreateAsset(panelSettings, "Assets/Game/UI/GamePanelSettings.asset");
-        }
-        
-        // Always enforce mobile CSS viewport resolution (390x844) to scale elements correctly
-        panelSettings.scaleMode = UnityEngine.UIElements.PanelScaleMode.ScaleWithScreenSize;
-        panelSettings.referenceResolution = new Vector2Int(390, 844);
-        panelSettings.screenMatchMode = UnityEngine.UIElements.PanelScreenMatchMode.MatchWidthOrHeight;
-        panelSettings.match = 0.5f;
-        EditorUtility.SetDirty(panelSettings);
-        
-        uiDoc.panelSettings = panelSettings;
-
-        UnityEngine.UIElements.VisualTreeAsset uxmlAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.VisualTreeAsset>("Assets/Game/UI/GameUI.uxml");
-        if (uxmlAsset != null)
-        {
-            uiDoc.visualTreeAsset = uxmlAsset;
+            Object.DestroyImmediate(uDocComp);
         }
 
         SerializedObject serializedUI = new SerializedObject(uiManager);
         serializedUI.FindProperty("scoreText").objectReferenceValue = scoreText;
+        serializedUI.FindProperty("bestScoreText").objectReferenceValue = bestScoreText;
         serializedUI.FindProperty("timerText").objectReferenceValue = timerText;
-        serializedUI.FindProperty("gameOverPanel").objectReferenceValue = gameOverPanel;
-        serializedUI.FindProperty("comboFeedbackText").objectReferenceValue = comboFeedbackText;
+        serializedUI.FindProperty("timerProgressCircle").objectReferenceValue = timerProgressCircle;
+        serializedUI.FindProperty("goldText").objectReferenceValue = goldText;
+        serializedUI.FindProperty("pauseButton").objectReferenceValue = pauseButton;
+        serializedUI.FindProperty("feverPanel").objectReferenceValue = feverPanel;
+        serializedUI.FindProperty("feverProgressBar").objectReferenceValue = feverProgressBar;
+        serializedUI.FindProperty("feverTimeLeftText").objectReferenceValue = null; // Do not overwrite main timerText
+        serializedUI.FindProperty("comboContainer").objectReferenceValue = comboContainer;
+        serializedUI.FindProperty("comboTitleText").objectReferenceValue = comboTitleText;
+        serializedUI.FindProperty("comboMultiplierText").objectReferenceValue = comboMultiplierText;
+        serializedUI.FindProperty("comboChainText").objectReferenceValue = comboChainText;
+        serializedUI.FindProperty("dangerBanner").objectReferenceValue = dangerBanner;
+        serializedUI.FindProperty("dangerText").objectReferenceValue = dangerText;
         serializedUI.FindProperty("flashScreenImage").objectReferenceValue = flashImageComp;
-        serializedUI.FindProperty("uiDocument").objectReferenceValue = uiDoc;
+        serializedUI.FindProperty("goalText").objectReferenceValue = goalText;
+        serializedUI.FindProperty("levelText").objectReferenceValue = levelText;
+        serializedUI.FindProperty("gameOverPanel").objectReferenceValue = gameOverPanel;
+        serializedUI.FindProperty("levelUpOverlay").objectReferenceValue = levelUpOverlay;
+        serializedUI.FindProperty("unlockedLevelTitleText").objectReferenceValue = unlockedLevelTitleText;
+        serializedUI.FindProperty("levelPreviewText").objectReferenceValue = levelPreviewText;
+        serializedUI.FindProperty("levelUpContinueButton").objectReferenceValue = levelUpContinueButton;
         serializedUI.ApplyModifiedProperties();
 
         GameManager manager = Object.FindAnyObjectByType<GameManager>();
@@ -956,6 +1499,18 @@ public class GameSetup
         SerializedObject serializedManager = new SerializedObject(manager);
         serializedManager.FindProperty("restartButton").objectReferenceValue = restartButton;
         serializedManager.ApplyModifiedProperties();
+
+        // Setup ComboManager with explosion particle prefab
+        ComboManager comboManager = Object.FindAnyObjectByType<ComboManager>();
+        if (comboManager == null)
+        {
+            GameObject comboGO = new GameObject("ComboManager");
+            comboManager = comboGO.AddComponent<ComboManager>();
+        }
+
+        SerializedObject serializedCombo = new SerializedObject(comboManager);
+        serializedCombo.FindProperty("particlePrefab").objectReferenceValue = explosionPrefab;
+        serializedCombo.ApplyModifiedProperties();
 
         // Save Scene & Assets
         AssetDatabase.SaveAssets();
@@ -972,12 +1527,18 @@ public class GameSetup
         if (inputProcessor != null) EditorUtility.SetDirty(inputProcessor);
         EditorUtility.SetDirty(canvas);
         EditorUtility.SetDirty(scoreManager);
-        EditorUtility.SetDirty(comboManager);
         EditorUtility.SetDirty(uiManager);
-        if (uiDoc != null) EditorUtility.SetDirty(uiDoc);
         EditorUtility.SetDirty(manager);
+        EditorUtility.SetDirty(comboManager);
         
         Debug.Log("Dot Chain Rush game setup complete with updated falling physics prefab, ObjectPool, Score, Combo & Audio Managers!");
+        Debug.Log($"[Setup Diagnostic] Canvas children: {canvas.transform.childCount}, Canvas active: {canvas.gameObject.activeSelf}, RenderMode: {canvas.renderMode}");
+
+        // Save the active scene to persist all hierarchy changes
+        var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(activeScene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
+        Debug.Log("[Setup] Scene saved successfully!");
     }
 
     private static void UpdateCirclePrefab(string prefabPath, Sprite circleSprite, Sprite highlightSprite, Sprite specialRingSprite, Sprite smokeGlowSprite, Sprite rainbowSprite, Sprite obstacleSprite, PhysicsMaterial2D physicsMat)
@@ -1150,6 +1711,97 @@ public class GameSetup
             importer.textureType = TextureImporterType.Sprite;
             importer.spritePixelsPerUnit = 64f;
             importer.filterMode = FilterMode.Bilinear;
+            importer.SaveAndReimport();
+        }
+    }
+
+    private static void BuildGradientRingTexture(string path)
+    {
+        string directory = System.IO.Path.GetDirectoryName(path);
+        if (!System.IO.Directory.Exists(directory))
+        {
+            System.IO.Directory.CreateDirectory(directory);
+        }
+
+        // Delete old texture if it exists to overwrite it
+        if (System.IO.File.Exists(path))
+        {
+            System.IO.File.Delete(path);
+        }
+
+        // High resolution hollow ring texture with baked gradient coloring (Yellow -> Orange -> Pink -> Purple)
+        int size = 256;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        float center = size / 2f - 0.5f;
+
+        // Gradient color stops
+        Color cYellow = new Color(1f, 0.82f, 0.12f);
+        Color cOrange = new Color(0.98f, 0.38f, 0.08f);
+        Color cPink = new Color(0.92f, 0.12f, 0.52f);
+        Color cPurple = new Color(0.48f, 0.18f, 0.95f);
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dx = x - center;
+                float dy = y - center;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                // Thin ring parameters (radius ~ 110 pixels out of 128 max radius)
+                float outerRadius = 114f;
+                float innerRadius = 100f;
+                float thickness = (outerRadius - innerRadius) / 2f;
+                float midRadius = innerRadius + thickness;
+
+                float alpha = 0f;
+                if (dist >= innerRadius - 2f && dist <= outerRadius + 2f)
+                {
+                    // Gaussian-like falloff across the thickness for a neon glowing hollow look
+                    float distFromMid = Mathf.Abs(dist - midRadius);
+                    alpha = Mathf.Exp(-(distFromMid * distFromMid) / (thickness * thickness * 0.35f));
+                }
+
+                if (alpha > 0.01f)
+                {
+                    // Bake gradient rotationally based on the angle
+                    float angle = Mathf.Atan2(dy, dx); // -PI to PI
+                    float t = (angle + Mathf.PI) / (2f * Mathf.PI); // 0 to 1
+
+                    // Shift gradient alignment so yellow is at top (1:28 position)
+                    t = Mathf.Repeat(t + 0.25f, 1f); 
+
+                    // Interpolate gradient
+                    Color pixelColor = Color.white;
+                    if (t < 0.25f)
+                        pixelColor = Color.Lerp(cPurple, cPink, t / 0.25f);
+                    else if (t < 0.5f)
+                        pixelColor = Color.Lerp(cPink, cOrange, (t - 0.25f) / 0.25f);
+                    else if (t < 0.75f)
+                        pixelColor = Color.Lerp(cOrange, cYellow, (t - 0.5f) / 0.25f);
+                    else
+                        pixelColor = Color.Lerp(cYellow, cPurple, (t - 0.75f) / 0.25f);
+
+                    tex.SetPixel(x, y, new Color(pixelColor.r, pixelColor.g, pixelColor.b, alpha));
+                }
+                else
+                {
+                    tex.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        tex.Apply();
+        byte[] bytes = tex.EncodeToPNG();
+        System.IO.File.WriteAllBytes(path, bytes);
+        AssetDatabase.ImportAsset(path);
+
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spritePixelsPerUnit = 256f;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.mipmapEnabled = false;
             importer.SaveAndReimport();
         }
     }

@@ -6,9 +6,15 @@ public class DotSpawner : MonoBehaviour
     public static DotSpawner Instance { get; private set; }
 
     [Header("Spawn Settings")]
-    [SerializeField] private float spawnY = 5f;
+    [SerializeField] private float spawnY = 3.5f; // Spawn inside visible play area (below header)
     [SerializeField] private float minX = -2.2f;
     [SerializeField] private float maxX = 2.2f;
+
+    public float SpawnY
+    {
+        get => spawnY;
+        set => spawnY = value;
+    }
 
     private float spawnTimer = 0f;
     private float dangerTimer = 0f;
@@ -41,15 +47,31 @@ public class DotSpawner : MonoBehaviour
         if (spawnTimer >= interval)
         {
             spawnTimer = 0f;
-            SpawnDot();
+
+            // Don't spawn if the area near spawn height is already occupied
+            // This prevents dots from piling above the play area frame
+            bool spawnAreaClear = true;
+            for (int i = 0; i < activeDots.Count; i++)
+            {
+                if (activeDots[i] != null && activeDots[i].transform.position.y > spawnY - 0.5f)
+                {
+                    spawnAreaClear = false;
+                    break;
+                }
+            }
+
+            if (spawnAreaClear)
+            {
+                SpawnDot();
+            }
         }
 
-        // Find the highest settled dot Y position (ignoring newly spawned dots at the very top Y >= 4.2)
+        // Find the highest settled dot Y position (ignoring dots near spawn height)
         float highestSettledY = -99f;
         for (int i = 0; i < activeDots.Count; i++)
         {
             Dot dot = activeDots[i];
-            if (dot != null && dot.transform.position.y < 4.2f)
+            if (dot != null && dot.transform.position.y < 3.0f)
             {
                 Rigidbody2D dotRb = dot.GetComponent<Rigidbody2D>();
                 if (dotRb != null && dotRb.linearVelocity.magnitude < 0.15f)
@@ -66,8 +88,8 @@ public class DotSpawner : MonoBehaviour
         Camera mainCam = Camera.main;
         if (mainCam != null)
         {
-            float startY = 1.0f;
-            float endY = 3.8f;
+            float startY = 0.6f;
+            float endY = 3.2f;
             float dangerT = Mathf.Clamp01((highestSettledY - startY) / (endY - startY));
             Color normalBg = new Color(0.12f, 0.12f, 0.16f);
             Color warningBg = new Color(0.32f, 0.06f, 0.08f); // Deep crimson red alert color
@@ -75,7 +97,7 @@ public class DotSpawner : MonoBehaviour
         }
 
         // Determine danger phase
-        if (highestSettledY >= 3.8f) // RED (Critical)
+        if (highestSettledY >= 3.2f) // RED (Critical) - adjusted for narrower play area
         {
             dangerTimer += Time.deltaTime;
             float remaining = Mathf.Max(0f, 3.0f - dangerTimer);
@@ -101,7 +123,7 @@ public class DotSpawner : MonoBehaviour
                 dangerTimer = 0f;
             }
         }
-        else if (highestSettledY >= 2.8f) // YELLOW (Warning)
+        else if (highestSettledY >= 2.4f) // YELLOW (Warning) - adjusted for narrower play area
         {
             dangerTimer = 0f; // Reset critical timer, but keep warning visual
             if (UIManager.Instance != null)
@@ -160,23 +182,30 @@ public class DotSpawner : MonoBehaviour
         }
         activeDots.Clear();
     }
-
     public GameObject SpawnDot()
     {
         if (ObjectPool.Instance == null) return null;
 
-        // Discrete columns to prevent overlapping physics at spawn time
-        int columnCount = 5;
+        // Calculate dynamic column count based on screen width (minX to maxX) and dot diameter (~0.52f)
+        float dotSize = 0.52f;
+        float playWidth = maxX - minX;
+        
+        // Ensure at least 3 columns, otherwise calculate how many dots fit with spacing (approx every 0.8f units)
+        int columnCount = Mathf.Max(3, Mathf.FloorToInt(playWidth / 0.8f) + 1);
+        
         int randomCol = Random.Range(0, columnCount);
         float step = (columnCount > 1) ? (maxX - minX) / (columnCount - 1) : 0f;
-        float spawnX = minX + randomCol * step;
+        
+        // Add a micro random offset (+/- 0.05f) to prevent dots from stacking in perfect, unnatural vertical lines
+        float microOffset = Random.Range(-0.06f, 0.06f);
+        float spawnX = minX + randomCol * step + microOffset;
         
         Vector3 spawnPos = new Vector3(spawnX, spawnY, 0f);
-
+        
         GameObject dotGO = ObjectPool.Instance.Get();
         dotGO.transform.position = spawnPos;
         dotGO.transform.rotation = Quaternion.identity;
-
+        
         Dot dot = dotGO.GetComponent<Dot>();
         if (dot == null)
         {
@@ -222,10 +251,12 @@ public class DotSpawner : MonoBehaviour
         }
         else
         {
-            // Occasional Bomb or Time dots in normal spawns
+            // Bomb and Time dot chances driven by DifficultyManager (level-based)
+            float bombChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.BombChance : 0f;
+            float timeDotChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.TimeDotChance : 0f;
             float r = Random.value;
-            if (r < 0.04f) type = DotType.Bomb;
-            else if (r < 0.08f) type = DotType.Time;
+            if (r < bombChance) type = DotType.Bomb;
+            else if (r < bombChance + timeDotChance) type = DotType.Time;
         }
 
         // Obstacles don't have standard colors

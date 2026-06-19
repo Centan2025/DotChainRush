@@ -113,15 +113,28 @@ public class TouchInputProcessor : MonoBehaviour
 
     private Dot GetDotAtPosition(Vector2 position)
     {
-        Collider2D[] hits = Physics2D.OverlapPointAll(position, dotLayerMask);
+        // Use OverlapCircle instead of OverlapPoint to add touch tolerance.
+        // Dots are scaled to ~0.52 with collider radius 0.5 → effective radius ~0.26.
+        // A touch radius of 0.15 gives a forgiving hit area matching visual size.
+        float touchRadius = 0.15f;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(position, touchRadius, dotLayerMask);
+
+        // Pick the closest dot to the touch point
+        Dot closestDot = null;
+        float closestDist = float.MaxValue;
         foreach (var hit in hits)
         {
             Dot dot = hit.GetComponent<Dot>();
             if (dot != null && !dot.IsObstacle)
             {
-                return dot;
+                float dist = Vector2.Distance(position, hit.transform.position);
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestDot = dot;
+                }
             }
         }
-        return null;
+        return closestDot;
     }
 }

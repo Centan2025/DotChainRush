@@ -94,17 +94,19 @@ public class ComboManager : MonoBehaviour
             }
         }
 
-        // Trigger Bomb Pop logic
+        // Trigger Bomb Pop logic (limited radius, no chain-bomb reaction)
         if (hasBomb)
         {
             List<Dot> bombTargets = new List<Dot>();
             if (DotSpawner.Instance != null)
             {
-                foreach (Dot dot in DotSpawner.Instance.ActiveDots)
+                // Copy the list to avoid modifying ActiveDots during iteration
+                List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
+                foreach (Dot dot in snapshot)
                 {
-                    if (dot != null && !chain.Contains(dot))
+                    if (dot != null && !chain.Contains(dot) && !dot.IsBomb) // Skip other bombs to prevent chain reaction
                     {
-                        if (Vector2.Distance(dot.transform.position, bombPosition) <= 2.2f)
+                        if (Vector2.Distance(dot.transform.position, bombPosition) <= 0.8f) // Only truly adjacent dots
                         {
                             bombTargets.Add(dot);
                         }
@@ -139,13 +141,15 @@ public class ComboManager : MonoBehaviour
         List<Dot> obstaclesToClear = new List<Dot>();
         if (DotSpawner.Instance != null)
         {
-            foreach (Dot dot in DotSpawner.Instance.ActiveDots)
+            // Copy the list to avoid modifying ActiveDots during iteration
+            List<Dot> frozenSnapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
+            foreach (Dot dot in frozenSnapshot)
             {
                 if (dot != null && dot.IsFrozen)
                 {
                     foreach (Dot chainDot in chain)
                     {
-                        if (chainDot != null && Vector2.Distance(dot.transform.position, chainDot.transform.position) <= 1.15f)
+                        if (chainDot != null && Vector2.Distance(dot.transform.position, chainDot.transform.position) <= 0.75f) // Only touching frozen dots
                         {
                             if (!obstaclesToClear.Contains(dot))
                             {

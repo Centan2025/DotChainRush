@@ -80,7 +80,7 @@ public class ChainController : MonoBehaviour
 
     private void ContinueChain(Vector3 worldPos, Dot dot)
     {
-        if (dot == null) return;
+        if (dot == null || currentChain.Count == 0) return;
 
         bool isValidColorMatch = (currentChainColor == -1) || 
                                  (dot.IsSpecial) || 
@@ -261,15 +261,24 @@ public class ChainController : MonoBehaviour
 
     private Dot GetDotAtPosition(Vector2 position)
     {
-        Collider2D[] hits = Physics2D.OverlapPointAll(position, dotLayerMask);
+        float touchRadius = 0.15f;
+        Collider2D[] hits = Physics2D.OverlapCircleAll(position, touchRadius, dotLayerMask);
+
+        Dot closestDot = null;
+        float closestDist = float.MaxValue;
         foreach (var hit in hits)
         {
             Dot dot = hit.GetComponent<Dot>();
             if (dot != null && !dot.IsObstacle)
             {
-                return dot;
+                float dist = Vector2.Distance(position, hit.transform.position);
+                if (dist < closestDist)
+                {
+                    closestDist = dist;
+                    closestDot = dot;
+                }
             }
         }
-        return null;
+        return closestDot;
     }
 }
