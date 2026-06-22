@@ -42,24 +42,37 @@ public class ObjectPool : MonoBehaviour
         {
             for (int i = 0; i < initialSize; i++)
             {
-                CreateNewInstance();
+                GameObject obj = Instantiate(prefab, transform);
+                obj.SetActive(false);
+                pool.Enqueue(obj);
+                inPool.Add(obj);
             }
         }
     }
 
-    private GameObject CreateNewInstance()
+    // Creates a brand-new instance WITHOUT adding it to the pool queue.
+    // Used by Get() when the pool is exhausted so the object is never
+    // double-counted (active AND sitting in the queue simultaneously).
+    private GameObject CreateOnDemandInstance()
     {
         GameObject obj = Instantiate(prefab, transform);
         obj.SetActive(false);
-        pool.Enqueue(obj);
-        inPool.Add(obj);
         return obj;
     }
 
     public GameObject Get()
     {
-        GameObject obj = pool.Count > 0 ? pool.Dequeue() : CreateNewInstance();
-        inPool.Remove(obj);
+        GameObject obj;
+        if (pool.Count > 0)
+        {
+            obj = pool.Dequeue();
+            inPool.Remove(obj);
+        }
+        else
+        {
+            // Pool exhausted: create a fresh object that is NOT in the queue
+            obj = CreateOnDemandInstance();
+        }
         obj.transform.SetParent(null);
         obj.SetActive(true);
         return obj;
