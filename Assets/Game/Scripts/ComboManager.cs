@@ -72,41 +72,137 @@ public class ComboManager : MonoBehaviour
 
         int particleCount = GameManager.Instance != null && GameManager.Instance.IsFeverActive ? 30 : 15;
 
-        // Spawn particle explosions at each dot's location
+        // Execute unique behaviors for the 85 dot types
         bool hasBomb = false;
         Vector3 bombPosition = Vector3.zero;
-        bool hasTimeDot = false;
+        float bombRadius = 0.8f;
+        bool clearAllDots = false;
+        bool triggerFever = false;
+        int scoreMultiplier = 1;
 
         foreach (Dot dot in chain)
         {
             if (dot != null)
             {
+                // Record telemetry pop metric
+                TelemetrySystem.RecordPop((TopTipi)dot.Type, 1);
+
                 SpawnExplosion(dot.transform.position, themeColor, particleCount);
-                if (dot.IsBomb)
+
+                // Specific dot type triggers
+                switch (dot.Type)
                 {
-                    hasBomb = true;
-                    bombPosition = dot.transform.position;
+                    case DotType.Bomba:
+                    case DotType.Ates:
+                        hasBomb = true;
+                        bombPosition = dot.transform.position;
+                        bombRadius = 1.2f;
+                        break;
+
+                    case DotType.Nukleer:
+                        hasBomb = true;
+                        bombPosition = dot.transform.position;
+                        bombRadius = 3.5f; // Screen-wide explosion
+                        break;
+
+                    case DotType.Zaman:
+                        AddTimeToTimer(5f);
+                        if (UIManager.Instance != null) UIManager.Instance.ShowComboFeedback("ZAMAN +5s", Color.green);
+                        break;
+
+                    case DotType.SonsuzZaman:
+                        AddTimeToTimer(12f);
+                        if (UIManager.Instance != null) UIManager.Instance.ShowComboFeedback("Sonsuz Zaman! +12s", Color.green);
+                        break;
+
+                    case DotType.ZamanBukucu:
+                        AddTimeToTimer(8f);
+                        if (UIManager.Instance != null) UIManager.Instance.ShowComboFeedback("Zaman Bükücü! +8s", Color.cyan);
+                        break;
+
+                    case DotType.Can:
+                        AddTimeToTimer(10f);
+                        break;
+
+                    case DotType.Altin2x:
+                    case DotType.Skor2x:
+                    case DotType.Kozmik:
+                        scoreMultiplier *= 2;
+                        break;
+
+                    case DotType.Jackpot:
+                        int currentGold = SaveSystem.LoadInt("GoldCoins", 12450);
+                        SaveSystem.SaveInt("GoldCoins", currentGold + 250);
+                        if (UIManager.Instance != null)
+                        {
+                            UIManager.Instance.UpdateGoldAmount(currentGold + 250);
+                            UIManager.Instance.ShowComboFeedback("JACKPOT! +250 GOLD", Color.yellow);
+                        }
+                        break;
+
+                    case DotType.Elektrik:
+                    case DotType.Rezonans:
+                        // Clear all other dots of the same color
+                        TriggerColorClear(dot.ColorId, chain);
+                        break;
+
+                    case DotType.GerceklikKirici:
+                        clearAllDots = true;
+                        break;
+
+                    case DotType.Omega:
+                        triggerFever = true;
+                        break;
                 }
-                if (dot.IsTimeDot)
+
+                // Handle Boss Dot Damage
+                if (BalanceDB.IsBoss((TopTipi)dot.Type))
                 {
-                    hasTimeDot = true;
+                    if (GameManager.Instance != null)
+                    {
+                        GameManager.Instance.DamageBoss();
+                    }
                 }
             }
         }
 
-        // Trigger Bomb Pop logic (limited radius, no chain-bomb reaction)
+        // Apply score multipliers from dot types
+        if (scoreMultiplier > 1)
+        {
+            points *= scoreMultiplier;
+            if (ScoreManager.Instance != null)
+            {
+                ScoreManager.Instance.AddPoints(points - (points / scoreMultiplier)); // Add remaining difference
+            }
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowComboFeedback($"MULTİPLİER x{scoreMultiplier}!", Color.magenta);
+            }
+        }
+
+        if (triggerFever && GameManager.Instance != null && !GameManager.Instance.IsFeverActive)
+        {
+            // Set progress to threshold to trigger fever next update
+            GameManager.Instance.RegisterChain(25);
+        }
+
+        if (clearAllDots)
+        {
+            TriggerScreenClear(chain);
+        }
+
+        // Trigger Bomb Pop logic
         if (hasBomb)
         {
             List<Dot> bombTargets = new List<Dot>();
             if (DotSpawner.Instance != null)
             {
-                // Copy the list to avoid modifying ActiveDots during iteration
                 List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
                 foreach (Dot dot in snapshot)
                 {
-                    if (dot != null && !chain.Contains(dot) && !dot.IsBomb) // Skip other bombs to prevent chain reaction
+                    if (dot != null && !chain.Contains(dot))
                     {
-                        if (Vector2.Distance(dot.transform.position, bombPosition) <= 0.8f) // Only truly adjacent dots
+                        if (Vector2.Distance(dot.transform.position, bombPosition) <= bombRadius)
                         {
                             bombTargets.Add(dot);
                         }
@@ -121,19 +217,6 @@ public class ComboManager : MonoBehaviour
                     SpawnExplosion(target.transform.position, targetColor, 20);
                     target.DestroyDot();
                 }
-            }
-        }
-
-        // Time Dot bonus logic
-        if (hasTimeDot)
-        {
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.AddPoints(250); // Huge bonus points
-            }
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowComboFeedback("TIME BONUS! +250 PTS", Color.green);
             }
         }
 
@@ -342,5 +425,49 @@ public class ComboManager : MonoBehaviour
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
         slowMoCoroutine = null;
+    }
+
+    private void AddTimeToTimer(float seconds)
+    {
+        var rtc = FindAnyObjectByType<RadialTimerController>();
+        if (rtc != null)
+        {
+            rtc.CurrentTime = Mathf.Min(rtc.totalTime, rtc.CurrentTime + seconds);
+        }
+        var ct = FindAnyObjectByType<CircularTimer>();
+        if (ct != null)
+        {
+            ct.CurrentTime = Mathf.Min(90f, ct.CurrentTime + seconds);
+        }
+    }
+
+    private void TriggerColorClear(int colorId, List<Dot> excluded)
+    {
+        if (DotSpawner.Instance == null) return;
+        List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
+        foreach (Dot target in snapshot)
+        {
+            if (target != null && !excluded.Contains(target) && target.ColorId == colorId && !target.IsObstacle)
+            {
+                Color targetColor = ColorManager.Instance != null ? ColorManager.Instance.GetColor(colorId) : Color.white;
+                SpawnExplosion(target.transform.position, targetColor, 15);
+                target.DestroyDot();
+            }
+        }
+    }
+
+    private void TriggerScreenClear(List<Dot> excluded)
+    {
+        if (DotSpawner.Instance == null) return;
+        List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
+        foreach (Dot target in snapshot)
+        {
+            if (target != null && !excluded.Contains(target) && !target.IsObstacle)
+            {
+                Color targetColor = ColorManager.Instance != null && target.ColorId >= 0 ? ColorManager.Instance.GetColor(target.ColorId) : Color.white;
+                SpawnExplosion(target.transform.position, targetColor, 15);
+                target.DestroyDot();
+            }
+        }
     }
 }

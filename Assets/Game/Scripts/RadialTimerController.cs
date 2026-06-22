@@ -13,6 +13,15 @@ public class RadialTimerController : MonoBehaviour
     [Header("Zaman Ayarları")]
     public float totalTime = 90f; // 90 saniye (1:30) oyun süresi
     private float currentTime;
+    public float CurrentTime
+    {
+        get => currentTime;
+        set
+        {
+            currentTime = Mathf.Max(0f, value);
+            UpdateUI();
+        }
+    }
 
     [Header("Renk Geçişi (Gradient)")]
     public Gradient timerGradient;

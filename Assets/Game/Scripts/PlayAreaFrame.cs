@@ -8,13 +8,13 @@ using UnityEngine;
 public class PlayAreaFrame : MonoBehaviour
 {
     [Header("Frame Settings")]
-    [SerializeField] private float cornerRadius = 0.35f;
+    [SerializeField] private float cornerRadius = 0.08f;
     [SerializeField] private int cornerSegments = 8;
     [SerializeField] private float lineWidth = 0.06f;
 
     [Header("Animation Settings")]
-    [SerializeField] private Color dimColor = new Color(0.15f, 0.08f, 0.4f, 0.5f);
-    [SerializeField] private Color glowColor = new Color(0.5f, 0.2f, 1f, 1f);
+    [SerializeField] private Color dimColor = new Color(0.48f, 0.38f, 0.15f, 0.45f);
+    [SerializeField] private Color glowColor = new Color(1.0f, 0.85f, 0.35f, 1.0f);
     [SerializeField] private float travelSpeed = 2.0f;
     [SerializeField] private float glowWidth = 0.15f; // fraction of perimeter that glows
 
@@ -46,7 +46,7 @@ public class PlayAreaFrame : MonoBehaviour
 
         // Match ScreenBoundsAdaptor's play area margins
         float headerHeight = 1.2f;
-        float footerHeight = 0.6f;
+        float footerHeight = 1.4f;
         float sidePadding = 0.08f;
 
         leftX = -halfWidth + sidePadding;
@@ -95,30 +95,41 @@ public class PlayAreaFrame : MonoBehaviour
     {
         if (lineRenderer == null || framePoints == null || totalPerimeter <= 0f) return;
 
-        // Significantly thinner line (0.02f base thickness)
-        float breatheWidth = 0.018f + 0.004f * Mathf.Sin(Time.time * 2.0f);
+        // Base line thickness breathing
+        float breatheWidth = 0.024f + 0.003f * Mathf.Sin(Time.time * 2.0f);
         lineRenderer.startWidth = breatheWidth;
         lineRenderer.endWidth = breatheWidth;
 
-        // Dynamic soft breathing opacity (glow pulsing) that fades in and out slowly
-        float baseAlpha = 0.45f + 0.35f * Mathf.Sin(Time.time * 1.5f); // pulses between 0.10 and 0.80 opacity
+        // Periodic vertical sweep: cycle every 6 seconds
+        float cycleTime = 6.0f;
+        float elapsed = Time.time % cycleTime;
+        float sweepDuration = 2.4f;
 
-        // Very slow, elegant scroll rate for the Gemini spectrum (0.12f speed)
-        float timeOffset = (Time.time * 0.08f) % 1f;
-
-        // Create the 8 key points of the Gemini Spectrum
-        // Gemini Colors: Deep Blue -> Indigo/Purple -> Hot Pink/Red -> Warm Orange -> Pastel Yellow -> Soft Teal/Green -> Cyan -> Deep Blue
-        Color[] geminiColors = new Color[]
+        float sweepY = -999f;
+        float sweepAlpha = 0f;
+        bool isSweeping = elapsed < sweepDuration;
+        if (isSweeping)
         {
-            new Color(0.12f, 0.45f, 1.0f, 0.95f),   // Blue
-            new Color(0.48f, 0.18f, 0.95f, 0.95f),  // Purple/Violet
-            new Color(0.92f, 0.12f, 0.52f, 0.95f),  // Pink/Red
-            new Color(0.98f, 0.38f, 0.08f, 0.95f),  // Orange
-            new Color(0.95f, 0.82f, 0.12f, 0.95f),  // Pastel Yellow
-            new Color(0.12f, 0.85f, 0.42f, 0.95f),  // Green
-            new Color(0.08f, 0.82f, 0.85f, 0.95f),  // Cyan
-            new Color(0.12f, 0.45f, 1.0f, 0.95f)    // Back to Blue for loop
-        };
+            float progress = elapsed / sweepDuration;
+
+            // Fade in/out the sweep intensity smoothly to prevent any sudden popping
+            if (progress < 0.2f)
+            {
+                sweepAlpha = progress / 0.2f;
+            }
+            else if (progress > 0.8f)
+            {
+                sweepAlpha = (1.0f - progress) / 0.2f;
+            }
+            else
+            {
+                sweepAlpha = 1.0f;
+            }
+
+            // Smooth step interpolation for sweep position
+            float easedProgress = Mathf.SmoothStep(0f, 1f, progress);
+            sweepY = Mathf.Lerp(topY + 0.8f, bottomY - 0.8f, easedProgress);
+        }
 
         Gradient gradient = new Gradient();
         GradientColorKey[] colorKeys = new GradientColorKey[8];
@@ -126,30 +137,65 @@ public class PlayAreaFrame : MonoBehaviour
 
         for (int i = 0; i < 8; i++)
         {
-            // Calculate shifted position to create rotation effect
-            float t = (float)i / 7f; // Distribute keys evenly along the line 0..1
-            float shiftedT = Mathf.Repeat(t + timeOffset, 1.0f);
+            float t = (float)i / 7f; // fraction along line length
 
-            // Interpolate colors based on shifted position to get the color at this physical fraction of the line
-            Color targetColor = GetGeminiColorAt(shiftedT, geminiColors);
-            
-            // Soft neon look: boost brightness slightly, keep alphas soft but visible
+            // Map 1D fraction t to 3D world position
+            float targetDist = t * totalPerimeter;
+            Vector3 pos = GetPointAtDistance(targetDist);
+
+            float intensity = 0f;
+            if (isSweeping)
+            {
+                float dist = Mathf.Abs(pos.y - sweepY);
+                float reflectWidth = 1.6f; // Extremely wide glow area for ultra-smooth transition
+                if (dist < reflectWidth)
+                {
+                    // Cosine-squared falloff curve for a super soft light distribution
+                    float shape = Mathf.Cos((dist / reflectWidth) * Mathf.PI * 0.5f);
+                    intensity = shape * shape * sweepAlpha;
+                }
+            }
+
+            Color targetColor;
+            float targetAlpha;
+
+            if (intensity > 0.6f)
+            {
+                float core = (intensity - 0.6f) / 0.4f;
+                targetColor = Color.Lerp(glowColor, Color.white, core);
+                targetAlpha = Mathf.Lerp(dimColor.a, 1.0f, intensity);
+            }
+            else
+            {
+                targetColor = Color.Lerp(dimColor, glowColor, intensity);
+                targetAlpha = Mathf.Lerp(dimColor.a, 0.8f, intensity);
+            }
+
             colorKeys[i] = new GradientColorKey(targetColor, t);
-            alphaKeys[i] = new GradientAlphaKey(baseAlpha, t);
+            alphaKeys[i] = new GradientAlphaKey(targetAlpha, t);
         }
 
         gradient.SetKeys(colorKeys, alphaKeys);
         lineRenderer.colorGradient = gradient;
     }
 
-    private Color GetGeminiColorAt(float t, Color[] spectrum)
+    private Vector3 GetPointAtDistance(float dist)
     {
-        float floatIdx = t * (spectrum.Length - 1);
-        int idx = Mathf.FloorToInt(floatIdx);
-        float nextIdx = Mathf.Ceil(floatIdx);
-        float lerpT = floatIdx - idx;
+        if (framePoints == null || framePoints.Length == 0) return Vector3.zero;
+        if (dist <= 0f) return framePoints[0];
+        if (dist >= totalPerimeter) return framePoints[framePoints.Length - 1];
 
-        return Color.Lerp(spectrum[idx], spectrum[(int)nextIdx % spectrum.Length], lerpT);
+        for (int i = 1; i < framePoints.Length; i++)
+        {
+            if (cumulativeDistances[i] >= dist)
+            {
+                float segmentLength = cumulativeDistances[i] - cumulativeDistances[i - 1];
+                if (segmentLength <= 0f) return framePoints[i];
+                float segmentT = (dist - cumulativeDistances[i - 1]) / segmentLength;
+                return Vector3.Lerp(framePoints[i - 1], framePoints[i], segmentT);
+            }
+        }
+        return framePoints[framePoints.Length - 1];
     }
 
     private Vector3[] BuildRoundedRect(float left, float right, float bottom, float top, float radius, int segments)
@@ -158,56 +204,18 @@ public class PlayAreaFrame : MonoBehaviour
         float maxRadius = Mathf.Min((right - left) * 0.5f, (top - bottom) * 0.5f);
         radius = Mathf.Min(radius, maxRadius);
 
-        int totalPoints = (segments + 1) * 4 + 1; // 4 corners + closing point
-        Vector3[] points = new Vector3[totalPoints];
-        int idx = 0;
+        // 8 points for 45-degree beveled corners + 1 closing point
+        Vector3[] points = new Vector3[9];
 
-        // Bottom-left corner (from bottom to left)
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = Mathf.PI + (Mathf.PI * 0.5f) * ((float)i / segments);
-            points[idx++] = new Vector3(
-                left + radius + Mathf.Cos(angle) * radius,
-                bottom + radius + Mathf.Sin(angle) * radius,
-                0f
-            );
-        }
-
-        // Bottom-right corner
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = 1.5f * Mathf.PI + (Mathf.PI * 0.5f) * ((float)i / segments);
-            points[idx++] = new Vector3(
-                right - radius + Mathf.Cos(angle) * radius,
-                bottom + radius + Mathf.Sin(angle) * radius,
-                0f
-            );
-        }
-
-        // Top-right corner
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = 0f + (Mathf.PI * 0.5f) * ((float)i / segments);
-            points[idx++] = new Vector3(
-                right - radius + Mathf.Cos(angle) * radius,
-                top - radius + Mathf.Sin(angle) * radius,
-                0f
-            );
-        }
-
-        // Top-left corner
-        for (int i = 0; i <= segments; i++)
-        {
-            float angle = Mathf.PI * 0.5f + (Mathf.PI * 0.5f) * ((float)i / segments);
-            points[idx++] = new Vector3(
-                left + radius + Mathf.Cos(angle) * radius,
-                top - radius + Mathf.Sin(angle) * radius,
-                0f
-            );
-        }
-
-        // Close the loop
-        points[idx] = points[0];
+        points[0] = new Vector3(left + radius, bottom, 0f);
+        points[1] = new Vector3(right - radius, bottom, 0f);
+        points[2] = new Vector3(right, bottom + radius, 0f);
+        points[3] = new Vector3(right, top - radius, 0f);
+        points[4] = new Vector3(right - radius, top, 0f);
+        points[5] = new Vector3(left + radius, top, 0f);
+        points[6] = new Vector3(left, top - radius, 0f);
+        points[7] = new Vector3(left, bottom + radius, 0f);
+        points[8] = points[0]; // Close loop
 
         return points;
     }

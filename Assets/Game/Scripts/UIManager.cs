@@ -511,12 +511,28 @@ public class UIManager : MonoBehaviour
             if (isFever)
             {
                 feverTimeLeftText.text = $"{current:F1}s";
+                feverTimeLeftText.color = NeonPink;
             }
             else
             {
                 int chain = Mathf.RoundToInt(current);
                 int threshold = Mathf.RoundToInt(max);
-                feverTimeLeftText.text = chain > 0 ? $"{chain}/{threshold}" : "";
+                float percent = threshold > 0 ? (float)chain / threshold * 100f : 0f;
+                
+                if (percent >= 100f)
+                {
+                    feverTimeLeftText.text = "READY!";
+                    feverTimeLeftText.color = Color.yellow;
+                }
+                else if (percent > 0f)
+                {
+                    feverTimeLeftText.text = $"%{Mathf.RoundToInt(percent)}";
+                    feverTimeLeftText.color = new Color(1f, 0.3f, 0.6f, 0.8f); // Slightly faded NeonPink
+                }
+                else
+                {
+                    feverTimeLeftText.text = "";
+                }
             }
         }
     }
@@ -546,6 +562,31 @@ public class UIManager : MonoBehaviour
 
     private System.Action onLevelUpOverlayContinueCallback;
 
+    private string GetRandomUpgradeAndApply()
+    {
+        if (GameBrain.Instance == null) return "Enerji Dengesi (Hazırlık tamamlandı)";
+
+        int index = Random.Range(0, 5);
+        switch (index)
+        {
+            case 0:
+                GameBrain.Instance.AddMutation("GravityMod", -0.015f);
+                return "Yerçekimi Hafifletme (Yerçekimi hızı azaldı!)";
+            case 1:
+                GameBrain.Instance.AddMutation("SpawnRateMod", -0.02f);
+                return "Hızlı Bağlantı (Topların geliş süresi hızlandı!)";
+            case 2:
+                GameBrain.Instance.AddMutation("ScoreMod", 0.05f);
+                return "Skor Akışı (Tüm patlamalar +5% ekstra puan!)";
+            case 3:
+                GameBrain.Instance.AddMutation("FeverMod", 1.0f);
+                return "Fever Fırtınası (Fever modunun süresi 1 saniye uzadı!)";
+            default:
+                GameBrain.Instance.AddMutation("GoldMod", 50f);
+                return "Altın Dokunuş (Seviye tamamlandığında +50 Altın bonus!)";
+        }
+    }
+
     public void ShowLevelUpOverlay(int nextLevel, string previewText, System.Action onContinue)
     {
         if (levelUpOverlay != null)
@@ -555,9 +596,11 @@ public class UIManager : MonoBehaviour
                 string title = LevelData.GetLevelDisplayTitle(nextLevel);
                 unlockedLevelTitleText.text = $"SEVİYE {nextLevel}\n<size=70%>{title}</size>";
             }
+            
+            string upgradeText = GetRandomUpgradeAndApply();
             if (levelPreviewText != null)
             {
-                levelPreviewText.text = previewText;
+                levelPreviewText.text = previewText + $"\n\n<b><color=#FFD700>ROGUELIKE MUTASYON KAZANILDI:</color></b>\n<color=#00FFFF>{upgradeText}</color>";
             }
 
             levelUpOverlay.SetActive(true);

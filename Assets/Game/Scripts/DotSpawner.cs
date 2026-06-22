@@ -182,6 +182,26 @@ public class DotSpawner : MonoBehaviour
         }
         activeDots.Clear();
     }
+    private int GetColorIdForType(TopTipi type)
+    {
+        if (type == TopTipi.KirmiziTop) return 0;
+        if (type == TopTipi.MaviTop) return 1;
+        if (type == TopTipi.YesilTop) return 2;
+        if (type == TopTipi.SariTop) return 3;
+        if (type == TopTipi.MorTop) return 4;
+
+        // Wildcards / Obstacles / Bosses have no color
+        if (type == TopTipi.Gokkusagi || type == TopTipi.VoidRainbow || type == TopTipi.Sonsuzluk || 
+            BalanceDB.IsBoss(type) || type == TopTipi.AgirTop || type == TopTipi.Buz || 
+            type == TopTipi.ElitAgir || type == TopTipi.OlumTopu)
+        {
+            return -1;
+        }
+
+        // Other powerups can be chained with a random color
+        return Random.Range(0, 5);
+    }
+
     public GameObject SpawnDot()
     {
         if (ObjectPool.Instance == null) return null;
@@ -212,60 +232,52 @@ public class DotSpawner : MonoBehaviour
             dot = dotGO.AddComponent<Dot>();
         }
 
-        // Check rates from DifficultyManager
-        float obstacleChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.ObstacleChance : 0f;
-        float fastDotChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.FastDotChance : 0f;
-        float specialChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.SpecialDotChance : 0f;
-
-        bool isObstacle = false;
-        bool isFastDot = false;
-        bool isSpecial = false;
-
-        float rand = Random.value;
-        if (rand < obstacleChance)
+        // Get allowed balls from GameBrain
+        List<TopTipi> allowed = null;
+        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
         {
-            isObstacle = true;
-        }
-        else if (rand < obstacleChance + fastDotChance)
-        {
-            isFastDot = true;
-        }
-        else if (rand < obstacleChance + fastDotChance + specialChance)
-        {
-            isSpecial = true;
+            allowed = GameBrain.Instance.CurrentLevelConfig.allowedBalls;
         }
 
-        DotType type = DotType.Normal;
-        if (isObstacle)
+        if (allowed == null || allowed.Count == 0)
         {
-            // 50% chance of Frozen or Metal dot
-            type = (Random.value < 0.5f) ? DotType.Frozen : DotType.Metal;
-        }
-        else if (isSpecial)
-        {
-            type = DotType.Rainbow;
-        }
-        else if (isFastDot)
-        {
-            type = DotType.Speed;
-        }
-        else
-        {
-            // Bomb and Time dot chances driven by DifficultyManager (level-based)
-            float bombChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.BombChance : 0f;
-            float timeDotChance = DifficultyManager.Instance != null ? DifficultyManager.Instance.TimeDotChance : 0f;
-            float r = Random.value;
-            if (r < bombChance) type = DotType.Bomb;
-            else if (r < bombChance + timeDotChance) type = DotType.Time;
+            allowed = new List<TopTipi> { TopTipi.KirmiziTop, TopTipi.MaviTop, TopTipi.YesilTop, TopTipi.SariTop, TopTipi.MorTop };
         }
 
-        // Obstacles don't have standard colors
-        int colorId = -1;
-        if (type != DotType.Metal && type != DotType.Frozen)
+        // Weighted random selection based on BalanceDB.spawn
+        float totalWeight = 0f;
+        foreach (var b in allowed)
         {
-            int colorCount = ColorManager.Instance != null ? ColorManager.Instance.GetColorCount() : 5;
-            colorId = Random.Range(0, colorCount);
+            float w = BalanceDB.spawn.ContainsKey(b) ? BalanceDB.spawn[b] : 1f;
+            totalWeight += w;
         }
+
+        TopTipi chosenType = allowed[0];
+        float r = Random.value * totalWeight;
+        float sum = 0f;
+        foreach (var b in allowed)
+        {
+            float w = BalanceDB.spawn.ContainsKey(b) ? BalanceDB.spawn[b] : 1f;
+            sum += w;
+            if (r <= sum)
+            {
+                chosenType = b;
+                break;
+            }
+        }
+
+        // Periodically spawn boss/hazard if boss level is active
+        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+        {
+            // 20% chance to spawn boss type directly as a target or element spawner
+            if (Random.value < 0.20f)
+            {
+                chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
+            }
+        }
+
+        DotType type = (DotType)chosenType;
+        int colorId = GetColorIdForType(chosenType);
 
         dot.Init(colorId, type, OnDotLifeEnded);
         activeDots.Add(dot);

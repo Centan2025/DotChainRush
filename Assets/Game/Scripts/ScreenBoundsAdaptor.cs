@@ -41,7 +41,7 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         float halfHeight = orthoHeight / 2f;
 
         float headerHeight = 1.2f;
-        float footerHeight = 0.6f;
+        float footerHeight = 1.4f;
         float sidePadding = 0.08f;
 
         float leftX = -halfWidth + sidePadding;
@@ -78,7 +78,7 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         // Dynamically adjust DotSpawner spawn limits and spawn height
         if (DotSpawner.Instance != null)
         {
-            float dotRadius = 0.26f;
+            float dotRadius = 0.22f;
             float spawnMargin = dotRadius + 0.15f;
             DotSpawner.Instance.SetSpawnRange(leftX + spawnMargin, rightX - spawnMargin);
 
@@ -100,7 +100,7 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         float halfHeight = orthoHeight / 2f;
 
         float headerHeight = 1.2f;
-        float footerHeight = 0.6f;
+        float footerHeight = 1.4f;
         float sidePadding = 0.08f;
 
         float leftX = -halfWidth + sidePadding;
@@ -122,7 +122,7 @@ public class ScreenBoundsAdaptor : MonoBehaviour
 
         // Draw Spawn Line
         Gizmos.color = Color.yellow;
-        float dotRadius = 0.26f;
+        float dotRadius = 0.22f;
         float spawnMargin = dotRadius + 0.15f;
         float spawnY = topY - dotRadius;
         Gizmos.DrawLine(new Vector3(leftX + spawnMargin, spawnY, 0), new Vector3(rightX - spawnMargin, spawnY, 0));

@@ -4,13 +4,13 @@ using UnityEngine;
 
 public enum DotType
 {
-    Normal,
-    Rainbow,
-    Speed,
-    Bomb,
-    Frozen,
-    Metal,
-    Time
+    Kozmik, KirmiziTop, MaviTop, YesilTop, SariTop, MorTop, Gokkusagi, HizliTop, AgirTop, Bomba, Buz, Yercekimi,
+    Kilit, Anahtar, Zaman, ElementalFuryBoss2, KaosOrbBoss1, Ates, BuzElement, Doga, Bosluk, Altin2x, Elektrik, Su, Toprak,
+    Isik, Ayna, KaraDelik, SahteTop, CiftYonlu, Yapiskan, Teleport, FlowMasterBoss4, Mutasyon, ZincirUstasi, PatlamaCekirdegi, GokkusagiKani, ZamanBukucu,
+    Kalkan, Skor2x, Can, Gorunmez, Kuantum, Glitch, ZamanLorduBoss, TersYercekimi, PatlayiciYagmur, ChaosIncarnateBoss7, PrestigeBoss, Virus, GravityCore,
+    OneMistake, HizCekirdegi, Kritik, OlumTopu, GerceklikKirici, KorruptBomba, VoidRainbow, ElitAgir, SonsuzZaman, KaosCekirdegi, Omega, TheVoidFinalBoss, ComboTopu,
+    Magnet, Jackpot, Ruzgar, DonmaAlani, Lazer, Enerji, Cogalan, SiyahIsik, Yildiz, Nukleer, BoyutKapisi, Hyper, Sinirsiz,
+    Plazma, KaranlikMadde, Rezonans, SolucanDeligi, Nebula, YildizTozu, Sonsuzluk, Kutsal
 }
 
 public class Dot : MonoBehaviour
@@ -25,15 +25,15 @@ public class Dot : MonoBehaviour
 
     public int ColorId { get; private set; }
     public bool IsSelected { get; private set; }
-    public DotType Type { get; private set; } = DotType.Normal;
+    public DotType Type { get; private set; } = DotType.KirmiziTop;
 
-    public bool IsSpecial => Type == DotType.Rainbow;
-    public bool IsObstacle => Type == DotType.Metal || Type == DotType.Frozen;
-    public bool IsFastDot => Type == DotType.Speed;
-    public bool IsBomb => Type == DotType.Bomb;
-    public bool IsFrozen => Type == DotType.Frozen;
-    public bool IsMetal => Type == DotType.Metal;
-    public bool IsTimeDot => Type == DotType.Time;
+    public bool IsSpecial => Type == DotType.Gokkusagi || Type == DotType.VoidRainbow || Type == DotType.Sonsuzluk;
+    public bool IsObstacle => Type == DotType.AgirTop || Type == DotType.Buz || Type == DotType.ElitAgir || Type == DotType.OlumTopu;
+    public bool IsFastDot => Type == DotType.HizliTop;
+    public bool IsBomb => Type == DotType.Bomba || Type == DotType.Ates || Type == DotType.Nukleer || Type == DotType.KorruptBomba || Type == DotType.PatlamaCekirdegi;
+    public bool IsFrozen => Type == DotType.Buz || Type == DotType.BuzElement || Type == DotType.DonmaAlani;
+    public bool IsMetal => Type == DotType.AgirTop || Type == DotType.ElitAgir;
+    public bool IsTimeDot => Type == DotType.Zaman || Type == DotType.SonsuzZaman || Type == DotType.ZamanBukucu;
 
     public AnimState CurrentAnimState { get; private set; } = AnimState.Idle;
 
@@ -234,6 +234,7 @@ public class Dot : MonoBehaviour
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             
@@ -258,7 +259,8 @@ public class Dot : MonoBehaviour
             StopCoroutine(animCoroutine);
             animCoroutine = null;
         }
-        animCoroutine = StartCoroutine(ScaleInCoroutine(type == DotType.Bomb ? 0.62f : 0.52f));
+        float targetScale = IsBomb ? 0.52f : (BalanceDB.IsBoss((TopTipi)Type) ? 1.2f : 0.44f);
+        animCoroutine = StartCoroutine(ScaleInCoroutine(targetScale));
 
         // Ensure sprite alpha is fully restored to 1.0f when recycled
         if (spriteRenderer != null)
@@ -340,23 +342,15 @@ public class Dot : MonoBehaviour
 
         if (IsObstacle)
         {
-            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
-            Color obstacleColor = IsMetal ? new Color(0.4f, 0.4f, 0.45f) : new Color(0.7f, 0.9f, 1f);
-            if (spriteRenderer != null) { spriteRenderer.sprite = obstacleSprite; spriteRenderer.color = obstacleColor; }
-            if (vcSR != null) { vcSR.sprite = obstacleSprite; vcSR.color = obstacleColor; }
+            ApplySpriteAndColor(obstacleSprite, IsMetal ? new Color(0.4f, 0.4f, 0.45f) : new Color(0.7f, 0.9f, 1f));
         }
         else if (IsSpecial)
         {
-            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
-            if (spriteRenderer != null) { spriteRenderer.sprite = specialSprite; spriteRenderer.color = Color.white; }
-            if (vcSR != null) { vcSR.sprite = specialSprite; vcSR.color = Color.white; }
+            ApplySpriteAndColor(specialSprite, Color.white);
         }
         else if (IsBomb)
         {
-            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
-            Color bombColor = new Color(0.6f, 0.0f, 0.0f);
-            if (spriteRenderer != null) { spriteRenderer.sprite = normalSprite; spriteRenderer.color = bombColor; }
-            if (vcSR != null) { vcSR.sprite = normalSprite; vcSR.color = bombColor; }
+            ApplySpriteAndColor(normalSprite, new Color(0.6f, 0.0f, 0.0f));
             
             if (specialRing != null)
             {
@@ -374,22 +368,28 @@ public class Dot : MonoBehaviour
         }
         else if (IsTimeDot)
         {
-            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
-            Color timeColor = new Color(0.1f, 0.85f, 0.3f, 1f);
-            if (spriteRenderer != null) { spriteRenderer.sprite = normalSprite; spriteRenderer.color = timeColor; }
-            if (vcSR != null) { vcSR.sprite = normalSprite; vcSR.color = timeColor; }
+            ApplySpriteAndColor(normalSprite, new Color(0.1f, 0.85f, 0.3f, 1f));
         }
         else
         {
-            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
-            if (spriteRenderer != null && normalSprite != null) spriteRenderer.sprite = normalSprite;
-            if (vcSR != null && normalSprite != null) vcSR.sprite = normalSprite;
+            ApplySpriteAndColor(normalSprite, ColorManager.Instance != null ? ColorManager.Instance.GetColor(ColorId) : Color.white);
             SetupColor();
         }
     }
 
     public void SetupColor()
     {
+        if (GetLibrarySprite() != null)
+        {
+            if (spriteRenderer != null) spriteRenderer.color = Color.white;
+            if (visualCore != null)
+            {
+                SpriteRenderer vcSR = visualCore.GetComponent<SpriteRenderer>();
+                if (vcSR != null) vcSR.color = Color.white;
+            }
+            return;
+        }
+
         if (ColorManager.Instance != null)
         {
             Color c = ColorManager.Instance.GetColor(ColorId);
@@ -438,34 +438,42 @@ public class Dot : MonoBehaviour
 
         SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
 
-        if (IsObstacle)
-        {
-            Color obstacleColor = IsMetal ? new Color(0.4f, 0.4f, 0.45f, 1f) : new Color(0.7f, 0.9f, 1f, 1f);
-            if (spriteRenderer != null) spriteRenderer.color = obstacleColor;
-            if (vcSR != null) vcSR.color = obstacleColor;
-        }
-        else if (IsBomb)
-        {
-            Color bombColor = new Color(0.6f, 0.0f, 0.0f, 1f);
-            if (spriteRenderer != null) spriteRenderer.color = bombColor;
-            if (vcSR != null) vcSR.color = bombColor;
-        }
-        else if (IsTimeDot)
-        {
-            Color timeColor = new Color(0.1f, 0.85f, 0.3f, 1f);
-            if (spriteRenderer != null) spriteRenderer.color = timeColor;
-            if (vcSR != null) vcSR.color = timeColor;
-        }
-        else if (IsSpecial)
+        if (GetLibrarySprite() != null)
         {
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
             if (vcSR != null) vcSR.color = Color.white;
         }
         else
         {
-            SetupColor();
+            if (IsObstacle)
+            {
+                Color obstacleColor = IsMetal ? new Color(0.4f, 0.4f, 0.45f, 1f) : new Color(0.7f, 0.9f, 1f, 1f);
+                if (spriteRenderer != null) spriteRenderer.color = obstacleColor;
+                if (vcSR != null) vcSR.color = obstacleColor;
+            }
+            else if (IsBomb)
+            {
+                Color bombColor = new Color(0.6f, 0.0f, 0.0f, 1f);
+                if (spriteRenderer != null) spriteRenderer.color = bombColor;
+                if (vcSR != null) vcSR.color = bombColor;
+            }
+            else if (IsTimeDot)
+            {
+                Color timeColor = new Color(0.1f, 0.85f, 0.3f, 1f);
+                if (spriteRenderer != null) spriteRenderer.color = timeColor;
+                if (vcSR != null) vcSR.color = timeColor;
+            }
+            else if (IsSpecial)
+            {
+                if (spriteRenderer != null) spriteRenderer.color = Color.white;
+                if (vcSR != null) vcSR.color = Color.white;
+            }
+            else
+            {
+                SetupColor();
+            }
         }
-        transform.localScale = Vector3.one * (IsBomb ? 0.62f : 0.52f); // Bombs are larger, base regular scale is 0.52f
+        transform.localScale = Vector3.one * (IsBomb ? 0.52f : 0.44f); // Bombs are larger, base regular scale is 0.44f
         currentVisualCoreScale = 1.0f;
 
         if (visualCore != null)
@@ -679,5 +687,44 @@ public class Dot : MonoBehaviour
         
         transform.localScale = Vector3.one * targetScale;
         animCoroutine = null;
+    }
+
+    private Sprite GetLibrarySprite()
+    {
+        if (DotChainRushLibrary.Instance == null) return null;
+        return DotChainRushLibrary.Instance.GetTopSprite((TopTipi)Type);
+    }
+
+    private void ApplySpriteAndColor(Sprite fallbackSprite, Color fallbackColor)
+    {
+        Sprite libSprite = GetLibrarySprite();
+        SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
+        
+        if (libSprite != null)
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = libSprite;
+                spriteRenderer.color = Color.white;
+            }
+            if (vcSR != null)
+            {
+                vcSR.sprite = libSprite;
+                vcSR.color = Color.white;
+            }
+        }
+        else
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = fallbackSprite;
+                spriteRenderer.color = fallbackColor;
+            }
+            if (vcSR != null)
+            {
+                vcSR.sprite = fallbackSprite;
+                vcSR.color = fallbackColor;
+            }
+        }
     }
 }

@@ -22,6 +22,9 @@ public class DifficultyManager : MonoBehaviour
     public string LevelSubtitle { get; private set; } = "TUTORIAL I";
     public string PhaseName { get; private set; } = "Öğretme";
 
+    [Header("Debug Settings")]
+    [SerializeField, Tooltip("Editor'da oyunu bu bölümden başlatmak için kullanın.")] private int debugStartLevel = 1;
+
     private void Awake()
     {
         if (Instance == null)
@@ -49,7 +52,7 @@ public class DifficultyManager : MonoBehaviour
     public void ResetDifficulty()
     {
         TimeElapsed = 0f;
-        SetLevel(1);
+        SetLevel(debugStartLevel > 0 ? debugStartLevel : 1);
     }
 
     public int GetGoalForLevel(int lvl)
@@ -60,6 +63,37 @@ public class DifficultyManager : MonoBehaviour
 
     public void SetLevel(int lvl)
     {
+        if (GameBrain.Instance != null)
+        {
+            GameBrain.Instance.SetCurrentLevel(lvl);
+            var config = GameBrain.Instance.CurrentLevelConfig;
+            if (config != null)
+            {
+                ActiveLevel = config.id;
+                ActiveGoal = config.targetScore;
+                SpawnInterval = config.spawnRate;
+                GravityScale = config.speed;
+
+                // Adjust by player run mutations
+                float spawnMod = GameBrain.Instance.GetMutationValue("SpawnRateMod");
+                float speedMod = GameBrain.Instance.GetMutationValue("GravityMod");
+
+                SpawnInterval = Mathf.Max(0.12f, SpawnInterval + spawnMod);
+                GravityScale = Mathf.Max(0.08f, GravityScale + speedMod);
+
+                SpecialDotChance = 0.15f;
+                FastDotChance = 0.15f;
+                ObstacleChance = 0.1f;
+                BombChance = 0.08f;
+                TimeDotChance = 0.08f;
+
+                LevelTitle = config.theme;
+                LevelSubtitle = config.isBossLevel ? "BOSS FIGHT" : "LEVEL " + config.id;
+                PhaseName = config.isBossLevel ? "Boss" : "Mücadele";
+                return;
+            }
+        }
+
         LevelInfo info = LevelData.GetLevel(lvl);
 
         ActiveLevel = info.Level;
@@ -78,17 +112,32 @@ public class DifficultyManager : MonoBehaviour
 
     public string GetLevelPreviewText(int nextLvl)
     {
+        if (GameBrain.Instance != null)
+        {
+            var config = GameBrain.Instance.levelStream.Get(nextLvl);
+            if (config != null) return config.previewText;
+        }
         LevelInfo info = LevelData.GetLevel(nextLvl);
         return info.PreviewText;
     }
 
     public string GetLevelTitle(int lvl)
     {
+        if (GameBrain.Instance != null)
+        {
+            var config = GameBrain.Instance.levelStream.Get(lvl);
+            if (config != null) return config.theme;
+        }
         return LevelData.GetLevelDisplayTitle(lvl);
     }
 
     public string GetLevelSubtitle(int lvl)
     {
+        if (GameBrain.Instance != null)
+        {
+            var config = GameBrain.Instance.levelStream.Get(lvl);
+            if (config != null) return config.isBossLevel ? "BOSS FIGHT" : "LEVEL " + config.id;
+        }
         return LevelData.GetLevelDisplaySubtitle(lvl);
     }
 }

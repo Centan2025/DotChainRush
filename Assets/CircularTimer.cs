@@ -13,6 +13,15 @@ public class CircularTimer : MonoBehaviour
     public float totalTime = 90f; // 90 saniye (1:30) oyun süresi
 
     private float time;
+    public float CurrentTime
+    {
+        get => time;
+        set
+        {
+            time = Mathf.Max(0f, value);
+            UpdateUI();
+        }
+    }
     private int lastCountdownSecond = -1;
     private TextMeshProUGUI centerCountdownText;
     private Coroutine textAnimationCoroutine;

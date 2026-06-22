@@ -23,8 +23,8 @@ public class ChainController : MonoBehaviour
 
         // Configure LineRenderer visuals (Uniform thick glowing energy tube)
         AnimationCurve widthCurve = new AnimationCurve();
-        widthCurve.AddKey(0f, 0.28f);   // Thinner connection line matching bubble size
-        widthCurve.AddKey(1f, 0.28f);
+        widthCurve.AddKey(0f, 0.15f);   // Thinner connection line matching smaller bubble size
+        widthCurve.AddKey(1f, 0.15f);
         lineRenderer.widthCurve = widthCurve;
         lineRenderer.widthMultiplier = 1f;
         lineRenderer.positionCount = 0;

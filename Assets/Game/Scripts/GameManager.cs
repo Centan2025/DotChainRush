@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
     // Stats variables
     public int BestCombo { get; private set; }
     private bool isLevelingUp = false;
+    public int BossHP { get; private set; }
 
     private void Awake()
     {
@@ -109,6 +110,24 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        #if UNITY_EDITOR
+        if (UnityEngine.InputSystem.Keyboard.current != null)
+        {
+            if (UnityEngine.InputSystem.Keyboard.current.nKey.wasPressedThisFrame)
+            {
+                Debug.Log("[Debug Cheat] Skipping to next level...");
+                StartCoroutine(LevelUpCoroutine(true));
+            }
+            if (UnityEngine.InputSystem.Keyboard.current.bKey.wasPressedThisFrame && DifficultyManager.Instance != null)
+            {
+                int prevLevel = Mathf.Max(1, DifficultyManager.Instance.ActiveLevel - 1);
+                Debug.Log($"[Debug Cheat] Going back to level {prevLevel}...");
+                DifficultyManager.Instance.SetLevel(prevLevel);
+                RestartGame();
+            }
+        }
+        #endif
+
         if (CurrentState != GameState.Playing) return;
 
         timeElapsed += Time.deltaTime;
@@ -233,44 +252,94 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator LevelUpCoroutine()
+    private System.Collections.IEnumerator LevelUpCoroutine(bool isCheat = false)
     {
         isLevelingUp = true;
         DeactivateFeverMode();
         ChangeState(GameState.LevelComplete);
 
-        // Visual flash and audio celebration
-        if (UIManager.Instance != null)
+        if (GameBrain.Instance != null)
         {
-            UIManager.Instance.TriggerScreenFlash(Color.cyan, 0.6f);
-        }
-        if (AudioManager.Instance != null && DifficultyManager.Instance != null)
-        {
-            AudioManager.Instance.PlayMilestoneSound(3); // Level-up chord sound
+            GameBrain.Instance.OnLevelEnded(true);
         }
 
-        yield return new WaitForSeconds(0.4f);
-
-        // Melt and sink all active dots downwards
-        if (DotSpawner.Instance != null)
+        if (isCheat)
         {
-            System.Collections.Generic.List<Dot> dotsToMelt = new System.Collections.Generic.List<Dot>(DotSpawner.Instance.ActiveDots);
-            foreach (Dot dot in dotsToMelt)
+            if (DotSpawner.Instance != null)
             {
-                if (dot != null && dot.gameObject.activeInHierarchy)
+                DotSpawner.Instance.ClearAll();
+            }
+        }
+        else
+        {
+            // Visual flash and audio celebration
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.TriggerScreenFlash(Color.cyan, 0.6f);
+            }
+            if (AudioManager.Instance != null && DifficultyManager.Instance != null)
+            {
+                AudioManager.Instance.PlayMilestoneSound(3); // Level-up chord sound
+            }
+
+            yield return new WaitForSeconds(0.4f);
+
+            // Melt and sink all active dots downwards
+            if (DotSpawner.Instance != null)
+            {
+                System.Collections.Generic.List<Dot> dotsToMelt = new System.Collections.Generic.List<Dot>(DotSpawner.Instance.ActiveDots);
+                foreach (Dot dot in dotsToMelt)
                 {
-                    if (ScoreManager.Instance != null && !dot.IsObstacle)
+                    if (dot != null && dot.gameObject.activeInHierarchy)
                     {
-                        // Award 5 bonus points per dot cleared
-                        ScoreManager.Instance.AddPoints(5);
+                        if (ScoreManager.Instance != null && !dot.IsObstacle)
+                        {
+                            // Award 5 bonus points per dot cleared
+                            ScoreManager.Instance.AddPoints(5);
+                        }
+                        dot.MeltAndSinkDown();
                     }
-                    dot.MeltAndSinkDown();
+                }
+                DotSpawner.Instance.ActiveDots.Clear();
+            }
+
+            yield return new WaitForSeconds(0.8f);
+
+            // Transfer remaining time into bonus points (10 pts per second) one by one quickly
+            RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
+            CircularTimer ct = FindAnyObjectByType<CircularTimer>();
+            float remainingTime = 0f;
+            if (rtc != null) remainingTime = rtc.CurrentTime;
+            else if (ct != null) remainingTime = ct.CurrentTime;
+
+            int secondsToTransfer = Mathf.CeilToInt(remainingTime);
+            if (secondsToTransfer > 0)
+            {
+                float timeStep = remainingTime / secondsToTransfer;
+                for (int i = 0; i < secondsToTransfer; i++)
+                {
+                    if (rtc != null) rtc.CurrentTime -= timeStep;
+                    if (ct != null) ct.CurrentTime -= timeStep;
+
+                    if (ScoreManager.Instance != null)
+                    {
+                        ScoreManager.Instance.AddPoints(10);
+                    }
+
+                    if (AudioManager.Instance != null)
+                    {
+                        AudioManager.Instance.PlayConnectSound(i % 15);
+                    }
+
+                    yield return new WaitForSeconds(0.02f);
                 }
             }
-            DotSpawner.Instance.ActiveDots.Clear();
-        }
 
-        yield return new WaitForSeconds(0.8f);
+            if (rtc != null) rtc.CurrentTime = 0f;
+            if (ct != null) ct.CurrentTime = 0f;
+
+            yield return new WaitForSeconds(0.5f);
+        }
 
         if (DifficultyManager.Instance != null && UIManager.Instance != null)
         {
@@ -283,6 +352,9 @@ public class GameManager : MonoBehaviour
                 UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
                 UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
                 
+                feverChainProgress = 0;
+                UIManager.Instance.UpdateFeverProgress(0f, FeverChainThreshold);
+
                 RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
                 if (rtc != null)
                 {
@@ -345,6 +417,15 @@ public class GameManager : MonoBehaviour
             DotSpawner.Instance.InitializeSpawner();
         }
 
+        if (GameBrain.Instance != null && DifficultyManager.Instance != null)
+        {
+            GameBrain.Instance.SetCurrentLevel(DifficultyManager.Instance.ActiveLevel);
+            if (GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+            {
+                BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
+            }
+        }
+
         if (DifficultyManager.Instance != null && UIManager.Instance != null)
         {
             UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
@@ -355,6 +436,11 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         if (CurrentState != GameState.Playing) return;
+
+        if (GameBrain.Instance != null)
+        {
+            GameBrain.Instance.OnLevelEnded(false);
+        }
 
         ChangeState(GameState.GameOver);
         DeactivateFeverMode();
@@ -407,6 +493,27 @@ public class GameManager : MonoBehaviour
         if (DotSpawner.Instance != null)
         {
             DotSpawner.Instance.ClearAll();
+        }
+    }
+
+    public void DamageBoss()
+    {
+        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+        {
+            BossHP--;
+            if (ComboManager.Instance != null)
+            {
+                ComboManager.Instance.TriggerCameraShake(0.35f, 0.4f);
+            }
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowComboFeedback("BOSS HIT!", $"HP: {BossHP}", "", Color.red);
+            }
+
+            if (BossHP <= 0)
+            {
+                StartCoroutine(LevelUpCoroutine());
+            }
         }
     }
 }
