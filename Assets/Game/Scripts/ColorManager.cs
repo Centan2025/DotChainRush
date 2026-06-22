@@ -18,6 +18,15 @@ public class ColorManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            // Enforce correct order and values for main colors at runtime to match TopTipi and DotSpawner mapping
+            dotColors = new Color[]
+            {
+                new Color(1f, 0.15f, 0.25f),   // Neon Hot Red (Index 0: KirmiziTop)
+                new Color(0f, 0.65f, 1.0f),    // Electric Blue (Index 1: MaviTop)
+                new Color(0f, 1.0f, 0.35f),    // Electric Lime/Green (Index 2: YesilTop)
+                new Color(1f, 0.95f, 0f),      // High-vis Yellow (Index 3: SariTop)
+                new Color(0.75f, 0.2f, 1f)     // Glowing Purple (Index 4: MorTop)
+            };
         }
         else
         {
