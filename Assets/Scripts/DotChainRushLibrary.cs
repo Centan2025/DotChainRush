@@ -8,7 +8,7 @@ using UnityEditor;
 public enum TopTipi
 {
     Kozmik, KirmiziTop, MaviTop, YesilTop, SariTop, MorTop, Gokkusagi, HizliTop, AgirTop, Bomba, Buz, Yercekimi,
-    Kilit, Anahtar, Zaman, ElementalFuryBoss2, KaosOrbBoss1, Ates, BuzElement, Doga, Bosluk, Altin2x, Elektrik, Su, Toprak,
+    Kilit, Anahtar, Zaman, KaosOrbBoss1, ElementalFuryBoss2, Ates, BuzElement, Doga, Bosluk, Altin2x, Elektrik, Su, Toprak,
     Isik, Ayna, KaraDelik, SahteTop, CiftYonlu, Yapiskan, Teleport, FlowMasterBoss4, Mutasyon, ZincirUstasi, PatlamaCekirdegi, GokkusagiKani, ZamanBukucu,
     Kalkan, Skor2x, Can, Gorunmez, Kuantum, Glitch, ZamanLorduBoss, TersYercekimi, PatlayiciYagmur, ChaosIncarnateBoss7, PrestigeBoss, Virus, GravityCore,
     OneMistake, HizCekirdegi, Kritik, OlumTopu, GerceklikKirici, KorruptBomba, VoidRainbow, ElitAgir, SonsuzZaman, KaosCekirdegi, Omega, TheVoidFinalBoss, ComboTopu,

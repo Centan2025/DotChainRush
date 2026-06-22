@@ -20,6 +20,8 @@ public class DotSpawner : MonoBehaviour
     private float dangerTimer = 0f;
     private readonly List<Dot> activeDots = new List<Dot>();
 
+    private bool bossGuaranteedSpawned = false;
+
     public List<Dot> ActiveDots => activeDots;
 
     private void Awake()
@@ -51,11 +53,13 @@ public class DotSpawner : MonoBehaviour
             // Don't spawn if the area near spawn height is already occupied
             // This prevents dots from piling above the play area frame
             bool spawnAreaClear = true;
+            Dot blockingDot = null;
             for (int i = 0; i < activeDots.Count; i++)
             {
                 if (activeDots[i] != null && activeDots[i].transform.position.y > spawnY - 0.5f)
                 {
                     spawnAreaClear = false;
+                    blockingDot = activeDots[i];
                     break;
                 }
             }
@@ -63,6 +67,10 @@ public class DotSpawner : MonoBehaviour
             if (spawnAreaClear)
             {
                 SpawnDot();
+            }
+            else
+            {
+                Debug.Log($"[Spawner] Spawn BLOCKED: dot near spawnY. Blocking dot: {blockingDot?.gameObject.name} | Type: {blockingDot?.Type} | Y: {blockingDot?.transform.position.y:F2} (spawnY={spawnY:F2})");
             }
         }
 
@@ -156,10 +164,17 @@ public class DotSpawner : MonoBehaviour
         ClearAll();
         spawnTimer = 0f;
         dangerTimer = 0f;
+        bossGuaranteedSpawned = false;
         if (DifficultyManager.Instance != null)
         {
             DifficultyManager.Instance.ResetDifficulty();
         }
+    }
+
+    /// <summary>Yeni bir boss seviyesine geçildiğinde boss spawn garantisini sıfırlar.</summary>
+    public void ResetBossSpawnState()
+    {
+        bossGuaranteedSpawned = false;
     }
 
     public void ClearAll()
@@ -266,13 +281,26 @@ public class DotSpawner : MonoBehaviour
             }
         }
 
-        // Periodically spawn boss/hazard if boss level is active
-        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+        // Boss level: guarantee first spawn is a boss, then 60% chance on subsequent spawns
+        bool isBossLevelNow = GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel;
+        Debug.Log($"[Spawner] SpawnDot called | isBossLevel={isBossLevelNow} | bossGuaranteedSpawned={bossGuaranteedSpawned} | chosenSoFar={chosenType}");
+
+        if (isBossLevelNow)
         {
-            // 20% chance to spawn boss type directly as a target or element spawner
-            if (Random.value < 0.20f)
+            if (!bossGuaranteedSpawned)
             {
                 chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
+                bossGuaranteedSpawned = true;
+                Debug.Log($"[Spawner] BOSS GUARANTEED → {chosenType}");
+            }
+            else if (Random.value < 0.60f)
+            {
+                chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
+                Debug.Log($"[Spawner] BOSS 60% ROLL → {chosenType}");
+            }
+            else
+            {
+                Debug.Log($"[Spawner] Boss roll missed → normal type {chosenType}");
             }
         }
 

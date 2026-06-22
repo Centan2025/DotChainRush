@@ -75,6 +75,9 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        // Dynamic Resolution UI Alignment (Deferred by 1 frame to allow layout initialization)
+        StartCoroutine(AlignUILayoutDeferred());
+
         // Deactivate overlay modules initially
         if (comboContainer != null) comboContainer.SetActive(false);
         if (dangerBanner != null) dangerBanner.SetActive(false);
@@ -625,5 +628,102 @@ public class UIManager : MonoBehaviour
             levelUpOverlay.SetActive(false);
         }
         onLevelUpOverlayContinueCallback?.Invoke();
+    }
+
+    private IEnumerator AlignUILayoutDeferred()
+    {
+        // Wait 1 frame so Canvas and automatic layout groups calculate their initial sizes/rects
+        yield return null;
+
+        // 1. Check and configure CanvasScaler for notch-safety & robust aspect ratio scaling
+        CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
+        if (scaler != null)
+        {
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(390, 844);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f; // Balance width scaling (perfect for 9:16 fallback)
+        }
+
+        // 2. Align Fever Bar (feverPanel / FeverSegmentedBar) directly under FeverIcon
+        GameObject feverIconGo = GameObject.Find("FeverIcon");
+        GameObject targetFeverPanel = feverPanel;
+        
+        // Fallback search if feverPanel is linked incorrectly
+        if (targetFeverPanel == null)
+        {
+            FeverSegmentedBar segBar = GetComponentInChildren<FeverSegmentedBar>(true);
+            if (segBar != null) targetFeverPanel = segBar.gameObject;
+        }
+
+        if (feverIconGo != null && targetFeverPanel != null)
+        {
+            RectTransform iconRt = feverIconGo.GetComponent<RectTransform>();
+            RectTransform panelRt = targetFeverPanel.GetComponent<RectTransform>();
+            if (iconRt != null && panelRt != null)
+            {
+                // Force top-left anchoring to align with FeverIcon
+                panelRt.anchorMin = new Vector2(0f, 1f);
+                panelRt.anchorMax = new Vector2(0f, 1f);
+                panelRt.pivot = new Vector2(0f, 1f);
+                
+                // Align Y coordinates relative to parent (Header)
+                Vector2 iconPos = iconRt.anchoredPosition;
+                panelRt.anchoredPosition = new Vector2(iconPos.x, iconPos.y - iconRt.sizeDelta.y - 12f);
+                panelRt.sizeDelta = new Vector2(110f, 26f); // Ensure a compact sleek width
+            }
+        }
+
+        // 3. Align Combo Container (comboContainer) exactly below ScoreText (Y=-200) and above the play boundaries (Y=-240)
+        if (comboContainer != null)
+        {
+            RectTransform comboRt = comboContainer.GetComponent<RectTransform>();
+            if (comboRt != null)
+            {
+                // Anchor to Top-Center to follow ScoreText
+                comboRt.anchorMin = new Vector2(0.5f, 1f);
+                comboRt.anchorMax = new Vector2(0.5f, 1f);
+                comboRt.pivot = new Vector2(0.5f, 1f);
+                
+                // Align Y exactly between header bar (200px) and play frame top bounds
+                comboRt.anchoredPosition = new Vector2(0f, -205f);
+                comboRt.sizeDelta = new Vector2(300f, 85f);
+                
+                // Adapt font sizes to fit nicely without overlap
+                if (comboTitleText != null) comboTitleText.fontSize = 24f;
+                if (comboMultiplierText != null) comboMultiplierText.fontSize = 20f;
+                if (comboChainText != null) comboChainText.fontSize = 11f;
+            }
+        }
+
+        // 4. Clean anchors for HeaderPanel & BottomHUDPanel to avoid clipping on high resolutions
+        GameObject headerPanelGo = GameObject.Find("HeaderPanel");
+        if (headerPanelGo != null)
+        {
+            RectTransform headerRt = headerPanelGo.GetComponent<RectTransform>();
+            if (headerRt != null)
+            {
+                headerRt.anchorMin = new Vector2(0f, 1f);
+                headerRt.anchorMax = new Vector2(1f, 1f);
+                headerRt.pivot = new Vector2(0.5f, 1f);
+                headerRt.anchoredPosition = Vector2.zero;
+                headerRt.sizeDelta = new Vector2(0f, 200f);
+            }
+        }
+
+        GameObject bottomHudGo = GameObject.Find("BottomHUDPanel");
+        if (bottomHudGo == null) bottomHudGo = GameObject.Find("BottomHUD");
+        if (bottomHudGo != null)
+        {
+            RectTransform bottomRt = bottomHudGo.GetComponent<RectTransform>();
+            if (bottomRt != null)
+            {
+                bottomRt.anchorMin = new Vector2(0f, 0f);
+                bottomRt.anchorMax = new Vector2(1f, 0f);
+                bottomRt.pivot = new Vector2(0.5f, 0f);
+                bottomRt.anchoredPosition = new Vector2(0f, 6f);
+                bottomRt.sizeDelta = new Vector2(-14f, 68f);
+            }
+        }
     }
 }

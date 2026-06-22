@@ -5,7 +5,7 @@ using UnityEngine;
 public enum DotType
 {
     Kozmik, KirmiziTop, MaviTop, YesilTop, SariTop, MorTop, Gokkusagi, HizliTop, AgirTop, Bomba, Buz, Yercekimi,
-    Kilit, Anahtar, Zaman, ElementalFuryBoss2, KaosOrbBoss1, Ates, BuzElement, Doga, Bosluk, Altin2x, Elektrik, Su, Toprak,
+    Kilit, Anahtar, Zaman, KaosOrbBoss1, ElementalFuryBoss2, Ates, BuzElement, Doga, Bosluk, Altin2x, Elektrik, Su, Toprak,
     Isik, Ayna, KaraDelik, SahteTop, CiftYonlu, Yapiskan, Teleport, FlowMasterBoss4, Mutasyon, ZincirUstasi, PatlamaCekirdegi, GokkusagiKani, ZamanBukucu,
     Kalkan, Skor2x, Can, Gorunmez, Kuantum, Glitch, ZamanLorduBoss, TersYercekimi, PatlayiciYagmur, ChaosIncarnateBoss7, PrestigeBoss, Virus, GravityCore,
     OneMistake, HizCekirdegi, Kritik, OlumTopu, GerceklikKirici, KorruptBomba, VoidRainbow, ElitAgir, SonsuzZaman, KaosCekirdegi, Omega, TheVoidFinalBoss, ComboTopu,
@@ -34,6 +34,7 @@ public class Dot : MonoBehaviour
     public bool IsFrozen => Type == DotType.Buz || Type == DotType.BuzElement || Type == DotType.DonmaAlani;
     public bool IsMetal => Type == DotType.AgirTop || Type == DotType.ElitAgir;
     public bool IsTimeDot => Type == DotType.Zaman || Type == DotType.SonsuzZaman || Type == DotType.ZamanBukucu;
+    public bool IsBossDot => BalanceDB.IsBoss((TopTipi)Type);
 
     public AnimState CurrentAnimState { get; private set; } = AnimState.Idle;
 
@@ -53,6 +54,10 @@ public class Dot : MonoBehaviour
             if (visualCore != null) spriteRenderer = visualCore.GetComponent<SpriteRenderer>();
             else spriteRenderer = GetComponent<SpriteRenderer>();
         }
+        if (normalSprite == null && spriteRenderer != null)
+        {
+            normalSprite = spriteRenderer.sprite;
+        }
         if (circleCollider == null) circleCollider = GetComponent<CircleCollider2D>();
         rb = GetComponent<Rigidbody2D>();
         specialRing = transform.Find("SpecialRing");
@@ -62,15 +67,15 @@ public class Dot : MonoBehaviour
 
     private void Update()
     {
-        // Offscreen check to prevent leaks (adapts dynamically to camera orthographic size)
-        float offscreenThreshold = -6f;
-        if (Camera.main != null)
-        {
-            offscreenThreshold = -Camera.main.orthographicSize - 2.0f;
-        }
+        // Offscreen check: uses a fixed safe threshold independent of Cinemachine camera shake.
+        // Play area bottom is approximately -3.5f. Dots can't go below ~-5f physically.
+        // We use -12f to give generous margin so falling dots are NEVER culled prematurely.
+        float orthoSize = (Camera.main != null) ? Camera.main.orthographicSize : 5f;
+        float offscreenThreshold = -orthoSize - 7f; // e.g. -5 - 7 = -12  (independent of cam Y)
 
         if (transform.position.y < offscreenThreshold)
         {
+            Debug.Log($"[Dot Recycle] Recycled offscreen: {gameObject.name} | y={transform.position.y:F2} threshold={offscreenThreshold:F2} type={Type}");
             RecycleImmediate();
             return;
         }
@@ -196,6 +201,37 @@ public class Dot : MonoBehaviour
                 }
             }
         }
+        // Boss dots: pulsing dark-magenta core + electric ring (only after ScaleIn finished)
+        else if (IsBossDot && CurrentAnimState == AnimState.Idle && animCoroutine == null)
+        {
+            SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
+            SpriteRenderer activeSR = vcSR != null ? vcSR : spriteRenderer;
+
+            // Pulsing colour: deep electric magenta
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 6f);
+            Color bossCore = Color.Lerp(new Color(0.6f, 0f, 1f), new Color(1f, 0f, 0.6f), pulse);
+            if (activeSR != null) activeSR.color = bossCore;
+
+            // Slow heavy rotation
+            transform.Rotate(Vector3.forward * -25f * Time.deltaTime);
+
+            if (specialRing != null)
+            {
+                specialRing.gameObject.SetActive(true);
+                float ringPulse = 1.2f + 0.15f * Mathf.Sin(Time.time * 8f);
+                specialRing.localScale = Vector3.one * ringPulse;
+                SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
+                if (ringSR != null) ringSR.color = new Color(1f, 0f, 0.9f, 0.9f);
+            }
+
+            if (smokeTransform != null)
+            {
+                float waveT = (Time.time * 1.5f) % 1f;
+                smokeTransform.localScale = Vector3.one * Mathf.Lerp(1.8f, 3.0f, waveT);
+                SpriteRenderer smokeSR = smokeTransform.GetComponent<SpriteRenderer>();
+                if (smokeSR != null) smokeSR.color = new Color(0.7f, 0f, 1f, Mathf.Lerp(0.5f, 0f, waveT));
+            }
+        }
         else if (CurrentAnimState == AnimState.Idle)
         {
             // Soft breathing for normal unselected dots' cloud halos
@@ -259,7 +295,7 @@ public class Dot : MonoBehaviour
             StopCoroutine(animCoroutine);
             animCoroutine = null;
         }
-        float targetScale = IsBomb ? 0.52f : (BalanceDB.IsBoss((TopTipi)Type) ? 1.2f : 0.44f);
+        float targetScale = IsBomb ? 0.52f : (BalanceDB.IsBoss((TopTipi)Type) ? 0.75f : 0.44f);
         animCoroutine = StartCoroutine(ScaleInCoroutine(targetScale));
 
         // Ensure sprite alpha is fully restored to 1.0f when recycled
@@ -340,7 +376,30 @@ public class Dot : MonoBehaviour
             smokeTransform.gameObject.SetActive(true);
         }
 
-        if (IsObstacle)
+        if (IsBossDot)
+        {
+            // Boss: use library sprite if available, otherwise vivid electric-magenta fallback
+            ApplySpriteAndColor(normalSprite, new Color(0.6f, 0f, 1f));
+
+            // Ring always on for bosses
+            if (specialRing != null)
+            {
+                specialRing.gameObject.SetActive(true);
+                specialRing.localScale = Vector3.one * 1.4f;
+                SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
+                if (ringSR != null) ringSR.color = new Color(1f, 0f, 0.9f, 0.95f);
+            }
+
+            // Wide purple glow halo
+            if (smokeTransform != null)
+            {
+                smokeTransform.localScale = Vector3.one * 2.5f;
+                SpriteRenderer smokeSR = smokeTransform.GetComponent<SpriteRenderer>();
+                if (smokeSR != null) smokeSR.color = new Color(0.7f, 0f, 1f, 0.45f);
+                smokeTransform.gameObject.SetActive(true);
+            }
+        }
+        else if (IsObstacle)
         {
             ApplySpriteAndColor(obstacleSprite, IsMetal ? new Color(0.4f, 0.4f, 0.45f) : new Color(0.7f, 0.9f, 1f));
         }
@@ -364,7 +423,7 @@ public class Dot : MonoBehaviour
                 SpriteRenderer smokeSR = smokeTransform.GetComponent<SpriteRenderer>();
                 if (smokeSR != null) smokeSR.color = new Color(1f, 0.1f, 0.0f, 0.45f);
             }
-            transform.localScale = Vector3.one * 0.62f;
+            // NOTE: Do NOT override transform.localScale here — ScaleInCoroutine handles it
         }
         else if (IsTimeDot)
         {
@@ -473,7 +532,7 @@ public class Dot : MonoBehaviour
                 SetupColor();
             }
         }
-        transform.localScale = Vector3.one * (IsBomb ? 0.52f : 0.44f); // Bombs are larger, base regular scale is 0.44f
+        transform.localScale = Vector3.one * (IsBomb ? 0.52f : (IsBossDot ? 0.75f : 0.44f)); // Bombs/Bosses are larger, base regular scale is 0.44f
         currentVisualCoreScale = 1.0f;
 
         if (visualCore != null)
@@ -633,8 +692,19 @@ public class Dot : MonoBehaviour
         RecycleImmediate();
     }
 
+    private void OnEnable()
+    {
+        Debug.Log($"[Dot Enable] OnEnable called for {gameObject.name} | Type: {Type} | Position: {transform.position}");
+    }
+
+    private void OnDisable()
+    {
+        Debug.Log($"[Dot Disable] OnDisable called for {gameObject.name} | Type: {Type} | Position: {transform.position}\n{System.Environment.StackTrace}");
+    }
+
     private void RecycleImmediate()
     {
+        Debug.Log($"[Dot Recycle] RecycleImmediate called for {gameObject.name} | Type: {Type} | Position: {transform.position}\n{System.Environment.StackTrace}");
         if (animCoroutine != null)
         {
             StopCoroutine(animCoroutine);
@@ -677,6 +747,12 @@ public class Dot : MonoBehaviour
         
         while (elapsed < duration)
         {
+            // Guard: if object was deactivated mid-coroutine, bail out immediately
+            if (!gameObject.activeInHierarchy)
+            {
+                yield break;
+            }
+
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             // Smooth custom curve for popping effect: starts fast, eases out
@@ -715,14 +791,16 @@ public class Dot : MonoBehaviour
         }
         else
         {
+            // Use fallback sprite if provided; if not, keep whatever sprite is already set
+            // (prevents dot becoming invisible when no sprite is assigned in Inspector)
             if (spriteRenderer != null)
             {
-                spriteRenderer.sprite = fallbackSprite;
+                if (fallbackSprite != null) spriteRenderer.sprite = fallbackSprite;
                 spriteRenderer.color = fallbackColor;
             }
             if (vcSR != null)
             {
-                vcSR.sprite = fallbackSprite;
+                if (fallbackSprite != null) vcSR.sprite = fallbackSprite;
                 vcSR.color = fallbackColor;
             }
         }

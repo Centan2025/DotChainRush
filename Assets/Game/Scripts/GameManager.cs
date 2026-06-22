@@ -113,10 +113,47 @@ public class GameManager : MonoBehaviour
         #if UNITY_EDITOR
         if (UnityEngine.InputSystem.Keyboard.current != null)
         {
+            // N = instant next level (no overlay, no coroutine — avoids IsPlaying=false blocking spawn)
             if (UnityEngine.InputSystem.Keyboard.current.nKey.wasPressedThisFrame)
             {
-                Debug.Log("[Debug Cheat] Skipping to next level...");
-                StartCoroutine(LevelUpCoroutine(true));
+                int nextLvl = DifficultyManager.Instance != null ? DifficultyManager.Instance.ActiveLevel + 1 : 2;
+                Debug.Log($"[Debug Cheat] Instant jump to level {nextLvl}");
+                if (DotSpawner.Instance != null) DotSpawner.Instance.ClearAll();
+                if (DotSpawner.Instance != null) DotSpawner.Instance.ResetBossSpawnState();
+                if (DifficultyManager.Instance != null) DifficultyManager.Instance.SetLevel(nextLvl);
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
+                    UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+                }
+                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+                {
+                    BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
+                    Debug.Log($"[Debug Cheat] BOSS LEVEL! bossType={GameBrain.Instance.CurrentLevelConfig.bossType} HP={BossHP}");
+                }
+                ChangeState(GameState.Playing);
+                isLevelingUp = false;
+            }
+            // 1 = jump directly to level 10 (first boss level) for quick testing
+            if (UnityEngine.InputSystem.Keyboard.current.digit1Key.wasPressedThisFrame)
+            {
+                Debug.Log("[Debug Cheat] Jumping to Level 10 (Boss)");
+                if (DotSpawner.Instance != null) DotSpawner.Instance.ClearAll();
+                if (DotSpawner.Instance != null) DotSpawner.Instance.ResetBossSpawnState();
+                if (DifficultyManager.Instance != null) DifficultyManager.Instance.SetLevel(10);
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
+                    UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+                }
+                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
+                {
+                    var cfg = GameBrain.Instance.CurrentLevelConfig;
+                    Debug.Log($"[Boss Test] isBossLevel={cfg.isBossLevel} bossType={cfg.bossType} allowedBalls={string.Join(",", cfg.allowedBalls)}");
+                    if (cfg.isBossLevel) BossHP = cfg.bossHP;
+                }
+                ChangeState(GameState.Playing);
+                isLevelingUp = false;
             }
             if (UnityEngine.InputSystem.Keyboard.current.bKey.wasPressedThisFrame && DifficultyManager.Instance != null)
             {
@@ -354,6 +391,17 @@ public class GameManager : MonoBehaviour
                 
                 feverChainProgress = 0;
                 UIManager.Instance.UpdateFeverProgress(0f, FeverChainThreshold);
+
+                // Reset boss spawn state for new level
+                if (DotSpawner.Instance != null)
+                {
+                    DotSpawner.Instance.ResetBossSpawnState();
+                }
+
+                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+                {
+                    BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
+                }
 
                 RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
                 if (rtc != null)

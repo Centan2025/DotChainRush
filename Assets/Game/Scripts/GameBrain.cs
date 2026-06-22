@@ -3,7 +3,23 @@ using UnityEngine;
 
 public class GameBrain : MonoBehaviour
 {
-    public static GameBrain Instance { get; private set; }
+    private static GameBrain instance;
+    public static GameBrain Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindAnyObjectByType<GameBrain>();
+                if (instance == null)
+                {
+                    GameObject go = new GameObject("GameBrain");
+                    instance = go.AddComponent<GameBrain>();
+                }
+            }
+            return instance;
+        }
+    }
 
     [Header("Engine Components")]
     public MetaLearner meta = new MetaLearner();
@@ -21,13 +37,13 @@ public class GameBrain : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
             DontDestroyOnLoad(gameObject);
             InitializeEngine();
         }
-        else
+        else if (instance != this)
         {
             Destroy(gameObject);
         }
