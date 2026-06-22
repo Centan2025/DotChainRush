@@ -217,11 +217,7 @@ public class Dot : MonoBehaviour
 
             if (specialRing != null)
             {
-                specialRing.gameObject.SetActive(true);
-                float ringPulse = 1.2f + 0.15f * Mathf.Sin(Time.time * 8f);
-                specialRing.localScale = Vector3.one * ringPulse;
-                SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
-                if (ringSR != null) ringSR.color = new Color(1f, 0f, 0.9f, 0.9f);
+                specialRing.gameObject.SetActive(false);
             }
 
             if (smokeTransform != null)
@@ -381,13 +377,10 @@ public class Dot : MonoBehaviour
             // Boss: use library sprite if available, otherwise vivid electric-magenta fallback
             ApplySpriteAndColor(normalSprite, new Color(0.6f, 0f, 1f));
 
-            // Ring always on for bosses
+            // No pink ring on boss dots
             if (specialRing != null)
             {
-                specialRing.gameObject.SetActive(true);
-                specialRing.localScale = Vector3.one * 1.4f;
-                SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
-                if (ringSR != null) ringSR.color = new Color(1f, 0f, 0.9f, 0.95f);
+                specialRing.gameObject.SetActive(false);
             }
 
             // Wide purple glow halo
