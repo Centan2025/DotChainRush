@@ -341,18 +341,27 @@ public class Dot : MonoBehaviour
             }
         }
 
-        // Start scale at zero for a smooth pop-in reveal effect when spawning
-        transform.localScale = Vector3.zero;
-        transform.rotation = Quaternion.identity; // Reset rotation from recycled Speed/Rainbow dots
-        currentVisualCoreScale = 1.0f;
-
         if (animCoroutine != null)
         {
             StopCoroutine(animCoroutine);
             animCoroutine = null;
         }
+
+        // Start scale at zero for a smooth pop-in reveal effect when spawning
+        transform.localScale = Vector3.zero;
+        transform.rotation = Quaternion.identity; // Reset rotation from recycled Speed/Rainbow dots
+        currentVisualCoreScale = 1.0f;
+
         float targetScale = IsBomb ? 0.52f : (BalanceDB.IsBoss((TopTipi)Type) ? 0.75f : 0.44f);
-        animCoroutine = StartCoroutine(ScaleInCoroutine(targetScale));
+        if (gameObject.activeInHierarchy)
+        {
+            animCoroutine = StartCoroutine(ScaleInCoroutine(targetScale));
+        }
+        else
+        {
+            // If spawned while not active in hierarchy (e.g. pool prep), assign full scale immediately
+            transform.localScale = Vector3.one * targetScale;
+        }
 
         // Ensure sprite alpha is fully restored to 1.0f when recycled
         if (spriteRenderer != null)
