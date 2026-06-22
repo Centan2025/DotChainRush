@@ -281,7 +281,6 @@ public class ChainController : MonoBehaviour
         }
         ApplyDefaultColors();
     }
-    }
 
     private void AddDotToChain(Dot dot)
     {
