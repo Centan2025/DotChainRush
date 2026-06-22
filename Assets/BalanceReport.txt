@@ -2,10 +2,10 @@
 DOT GAME — AAA SIMULATION LAB BALANCE REPORT
 ============================================================
 Total Virtual Runs: 10,000
-Global Wins: 422 (%4,2 win rate)
-Global Fails: 9578
-Global Time-Outs: 6330
-Total Issues Detected: 383
+Global Wins: 417 (%4,2 win rate)
+Global Fails: 9583
+Global Time-Outs: 6271
+Total Issues Detected: 384
 ============================================================
 
 LEVEL DIAGNOSTICS & RECOMMENDED FIXES:
@@ -18,36 +18,40 @@ Level 2 | Problem: Too Easy
   - Details: Win rate is too high (%100) over 50 attempts.
   - Suggested Fix: Increase targetScore by 15%, increase gravityScale, or speed up spawnRate (interval).
 
+Level 3 | Problem: Too Easy
+  - Details: Win rate is too high (%100) over 50 attempts.
+  - Suggested Fix: Increase targetScore by 15%, increase gravityScale, or speed up spawnRate (interval).
+
 Level 8 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %42 of runs.
+  - Details: Players time out in %44 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 9 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
-  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
-
-Level 10 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %46 of runs.
-  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
-
-Level 11 | Problem: Time Problem / Timeouts
   - Details: Players time out in %42 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
+Level 10 | Problem: Time Problem / Timeouts
+  - Details: Players time out in %56 of runs.
+  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
+
+Level 11 | Problem: Time Problem / Timeouts
+  - Details: Players time out in %56 of runs.
+  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
+
 Level 12 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 13 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%16) over 50 attempts.
+  - Details: Win rate is extremely low (%18) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 13 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %48 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 14 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%10) over 50 attempts.
+  - Details: Win rate is extremely low (%18) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 14 | Problem: Time Problem / Timeouts
@@ -55,39 +59,39 @@ Level 14 | Problem: Time Problem / Timeouts
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 15 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%8) over 50 attempts.
+  - Details: Win rate is extremely low (%10) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 15 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 16 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%14) over 50 attempts.
-  - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
-
-Level 16 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
-  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
-
-Level 17 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%2) over 50 attempts.
-  - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
-
-Level 17 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
-  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
-
-Level 18 | Problem: Difficulty Spike / Wall
   - Details: Win rate is extremely low (%4) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
+Level 16 | Problem: Time Problem / Timeouts
+  - Details: Players time out in %62 of runs.
+  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
+
+Level 17 | Problem: Difficulty Spike / Wall
+  - Details: Win rate is extremely low (%4) over 50 attempts.
+  - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
+
+Level 17 | Problem: Time Problem / Timeouts
+  - Details: Players time out in %58 of runs.
+  - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
+
+Level 18 | Problem: Difficulty Spike / Wall
+  - Details: Win rate is extremely low (%0) over 50 attempts.
+  - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
+
 Level 18 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 19 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%2) over 50 attempts.
+  - Details: Win rate is extremely low (%0) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 19 | Problem: Time Problem / Timeouts
@@ -95,11 +99,11 @@ Level 19 | Problem: Time Problem / Timeouts
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 20 | Problem: Difficulty Spike / Wall
-  - Details: Win rate is extremely low (%4) over 50 attempts.
+  - Details: Win rate is extremely low (%0) over 50 attempts.
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 20 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 21 | Problem: Difficulty Spike / Wall
@@ -107,7 +111,7 @@ Level 21 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 21 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 22 | Problem: Difficulty Spike / Wall
@@ -115,7 +119,7 @@ Level 22 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 22 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 23 | Problem: Difficulty Spike / Wall
@@ -123,7 +127,7 @@ Level 23 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 23 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 24 | Problem: Difficulty Spike / Wall
@@ -131,7 +135,7 @@ Level 24 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 24 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 25 | Problem: Difficulty Spike / Wall
@@ -139,7 +143,7 @@ Level 25 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 25 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 26 | Problem: Difficulty Spike / Wall
@@ -147,7 +151,7 @@ Level 26 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 26 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %82 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 27 | Problem: Difficulty Spike / Wall
@@ -155,7 +159,7 @@ Level 27 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 27 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 28 | Problem: Difficulty Spike / Wall
@@ -171,7 +175,7 @@ Level 29 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 29 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 30 | Problem: Difficulty Spike / Wall
@@ -179,7 +183,7 @@ Level 30 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 30 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 31 | Problem: Difficulty Spike / Wall
@@ -187,7 +191,7 @@ Level 31 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 31 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 32 | Problem: Difficulty Spike / Wall
@@ -195,7 +199,7 @@ Level 32 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 32 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 33 | Problem: Difficulty Spike / Wall
@@ -203,7 +207,7 @@ Level 33 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 33 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 34 | Problem: Difficulty Spike / Wall
@@ -211,7 +215,7 @@ Level 34 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 34 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 35 | Problem: Difficulty Spike / Wall
@@ -219,7 +223,7 @@ Level 35 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 35 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 36 | Problem: Difficulty Spike / Wall
@@ -227,7 +231,7 @@ Level 36 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 36 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 37 | Problem: Difficulty Spike / Wall
@@ -235,7 +239,7 @@ Level 37 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 37 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %52 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 38 | Problem: Difficulty Spike / Wall
@@ -251,7 +255,7 @@ Level 39 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 39 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 40 | Problem: Difficulty Spike / Wall
@@ -259,7 +263,7 @@ Level 40 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 40 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %54 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 41 | Problem: Difficulty Spike / Wall
@@ -267,7 +271,7 @@ Level 41 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 41 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 42 | Problem: Difficulty Spike / Wall
@@ -275,7 +279,7 @@ Level 42 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 42 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 43 | Problem: Difficulty Spike / Wall
@@ -283,7 +287,7 @@ Level 43 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 43 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 44 | Problem: Difficulty Spike / Wall
@@ -291,7 +295,7 @@ Level 44 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 44 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 45 | Problem: Difficulty Spike / Wall
@@ -299,7 +303,7 @@ Level 45 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 45 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 46 | Problem: Difficulty Spike / Wall
@@ -307,7 +311,7 @@ Level 46 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 46 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %78 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 47 | Problem: Difficulty Spike / Wall
@@ -315,7 +319,7 @@ Level 47 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 47 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 48 | Problem: Difficulty Spike / Wall
@@ -323,7 +327,7 @@ Level 48 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 48 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 49 | Problem: Difficulty Spike / Wall
@@ -331,7 +335,7 @@ Level 49 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 49 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 50 | Problem: Difficulty Spike / Wall
@@ -339,7 +343,7 @@ Level 50 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 50 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 51 | Problem: Difficulty Spike / Wall
@@ -347,7 +351,7 @@ Level 51 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 51 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 52 | Problem: Difficulty Spike / Wall
@@ -355,7 +359,7 @@ Level 52 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 52 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %50 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 53 | Problem: Difficulty Spike / Wall
@@ -363,7 +367,7 @@ Level 53 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 53 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 54 | Problem: Difficulty Spike / Wall
@@ -371,7 +375,7 @@ Level 54 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 54 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 55 | Problem: Difficulty Spike / Wall
@@ -379,7 +383,7 @@ Level 55 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 55 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 56 | Problem: Difficulty Spike / Wall
@@ -387,7 +391,7 @@ Level 56 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 56 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 57 | Problem: Difficulty Spike / Wall
@@ -395,7 +399,7 @@ Level 57 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 57 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 58 | Problem: Difficulty Spike / Wall
@@ -411,7 +415,7 @@ Level 59 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 59 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 60 | Problem: Difficulty Spike / Wall
@@ -419,7 +423,7 @@ Level 60 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 60 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 61 | Problem: Difficulty Spike / Wall
@@ -427,7 +431,7 @@ Level 61 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 61 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 62 | Problem: Difficulty Spike / Wall
@@ -435,7 +439,7 @@ Level 62 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 62 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %78 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 63 | Problem: Difficulty Spike / Wall
@@ -443,7 +447,7 @@ Level 63 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 63 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %54 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 64 | Problem: Difficulty Spike / Wall
@@ -451,7 +455,7 @@ Level 64 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 64 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %52 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 65 | Problem: Difficulty Spike / Wall
@@ -459,7 +463,7 @@ Level 65 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 65 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 66 | Problem: Difficulty Spike / Wall
@@ -467,7 +471,7 @@ Level 66 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 66 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %52 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 67 | Problem: Difficulty Spike / Wall
@@ -483,7 +487,7 @@ Level 68 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 68 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 69 | Problem: Difficulty Spike / Wall
@@ -491,7 +495,7 @@ Level 69 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 69 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 70 | Problem: Difficulty Spike / Wall
@@ -499,7 +503,7 @@ Level 70 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 70 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 71 | Problem: Difficulty Spike / Wall
@@ -507,7 +511,7 @@ Level 71 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 71 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 72 | Problem: Difficulty Spike / Wall
@@ -515,7 +519,7 @@ Level 72 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 72 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 73 | Problem: Difficulty Spike / Wall
@@ -523,7 +527,7 @@ Level 73 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 73 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 74 | Problem: Difficulty Spike / Wall
@@ -531,7 +535,7 @@ Level 74 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 74 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 75 | Problem: Difficulty Spike / Wall
@@ -539,7 +543,7 @@ Level 75 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 75 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 76 | Problem: Difficulty Spike / Wall
@@ -547,7 +551,7 @@ Level 76 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 76 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 77 | Problem: Difficulty Spike / Wall
@@ -555,7 +559,7 @@ Level 77 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 77 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 78 | Problem: Difficulty Spike / Wall
@@ -563,7 +567,7 @@ Level 78 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 78 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 79 | Problem: Difficulty Spike / Wall
@@ -571,7 +575,7 @@ Level 79 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 79 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %80 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 80 | Problem: Difficulty Spike / Wall
@@ -579,7 +583,7 @@ Level 80 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 80 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 81 | Problem: Difficulty Spike / Wall
@@ -587,7 +591,7 @@ Level 81 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 81 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 82 | Problem: Difficulty Spike / Wall
@@ -603,7 +607,7 @@ Level 83 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 83 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 84 | Problem: Difficulty Spike / Wall
@@ -611,7 +615,7 @@ Level 84 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 84 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 85 | Problem: Difficulty Spike / Wall
@@ -619,7 +623,7 @@ Level 85 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 85 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 86 | Problem: Difficulty Spike / Wall
@@ -627,7 +631,7 @@ Level 86 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 86 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 87 | Problem: Difficulty Spike / Wall
@@ -635,7 +639,7 @@ Level 87 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 87 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 88 | Problem: Difficulty Spike / Wall
@@ -643,7 +647,7 @@ Level 88 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 88 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 89 | Problem: Difficulty Spike / Wall
@@ -651,7 +655,7 @@ Level 89 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 89 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 90 | Problem: Difficulty Spike / Wall
@@ -659,7 +663,7 @@ Level 90 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 90 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 91 | Problem: Difficulty Spike / Wall
@@ -667,7 +671,7 @@ Level 91 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 91 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %46 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 92 | Problem: Difficulty Spike / Wall
@@ -675,7 +679,7 @@ Level 92 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 92 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 93 | Problem: Difficulty Spike / Wall
@@ -683,7 +687,7 @@ Level 93 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 93 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 94 | Problem: Difficulty Spike / Wall
@@ -691,7 +695,7 @@ Level 94 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 94 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 95 | Problem: Difficulty Spike / Wall
@@ -699,7 +703,7 @@ Level 95 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 95 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 96 | Problem: Difficulty Spike / Wall
@@ -707,7 +711,7 @@ Level 96 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 96 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %54 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 97 | Problem: Difficulty Spike / Wall
@@ -715,7 +719,7 @@ Level 97 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 97 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %78 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 98 | Problem: Difficulty Spike / Wall
@@ -723,7 +727,7 @@ Level 98 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 98 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 99 | Problem: Difficulty Spike / Wall
@@ -731,7 +735,7 @@ Level 99 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 99 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 100 | Problem: Difficulty Spike / Wall
@@ -739,7 +743,7 @@ Level 100 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 100 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 101 | Problem: Difficulty Spike / Wall
@@ -747,7 +751,7 @@ Level 101 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 101 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 102 | Problem: Difficulty Spike / Wall
@@ -755,7 +759,7 @@ Level 102 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 102 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 103 | Problem: Difficulty Spike / Wall
@@ -763,7 +767,7 @@ Level 103 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 103 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 104 | Problem: Difficulty Spike / Wall
@@ -771,7 +775,7 @@ Level 104 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 104 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 105 | Problem: Difficulty Spike / Wall
@@ -779,7 +783,7 @@ Level 105 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 105 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 106 | Problem: Difficulty Spike / Wall
@@ -787,7 +791,7 @@ Level 106 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 106 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 107 | Problem: Difficulty Spike / Wall
@@ -795,7 +799,7 @@ Level 107 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 107 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 108 | Problem: Difficulty Spike / Wall
@@ -803,7 +807,7 @@ Level 108 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 108 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 109 | Problem: Difficulty Spike / Wall
@@ -811,7 +815,7 @@ Level 109 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 109 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 110 | Problem: Difficulty Spike / Wall
@@ -819,7 +823,7 @@ Level 110 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 110 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 111 | Problem: Difficulty Spike / Wall
@@ -827,7 +831,7 @@ Level 111 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 111 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %78 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 112 | Problem: Difficulty Spike / Wall
@@ -835,7 +839,7 @@ Level 112 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 112 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 113 | Problem: Difficulty Spike / Wall
@@ -851,7 +855,7 @@ Level 114 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 114 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 115 | Problem: Difficulty Spike / Wall
@@ -859,7 +863,7 @@ Level 115 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 115 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 116 | Problem: Difficulty Spike / Wall
@@ -867,7 +871,7 @@ Level 116 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 116 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 117 | Problem: Difficulty Spike / Wall
@@ -875,7 +879,7 @@ Level 117 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 117 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 118 | Problem: Difficulty Spike / Wall
@@ -883,7 +887,7 @@ Level 118 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 118 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %78 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 119 | Problem: Difficulty Spike / Wall
@@ -891,7 +895,7 @@ Level 119 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 119 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 120 | Problem: Difficulty Spike / Wall
@@ -899,7 +903,7 @@ Level 120 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 120 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %52 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 121 | Problem: Difficulty Spike / Wall
@@ -907,7 +911,7 @@ Level 121 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 121 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 122 | Problem: Difficulty Spike / Wall
@@ -915,7 +919,7 @@ Level 122 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 122 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 123 | Problem: Difficulty Spike / Wall
@@ -923,7 +927,7 @@ Level 123 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 123 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 124 | Problem: Difficulty Spike / Wall
@@ -931,7 +935,7 @@ Level 124 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 124 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %80 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 125 | Problem: Difficulty Spike / Wall
@@ -939,7 +943,7 @@ Level 125 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 125 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 126 | Problem: Difficulty Spike / Wall
@@ -947,7 +951,7 @@ Level 126 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 126 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 127 | Problem: Difficulty Spike / Wall
@@ -955,7 +959,7 @@ Level 127 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 127 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 128 | Problem: Difficulty Spike / Wall
@@ -963,7 +967,7 @@ Level 128 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 128 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %54 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 129 | Problem: Difficulty Spike / Wall
@@ -971,7 +975,7 @@ Level 129 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 129 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 130 | Problem: Difficulty Spike / Wall
@@ -979,7 +983,7 @@ Level 130 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 130 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 131 | Problem: Difficulty Spike / Wall
@@ -995,7 +999,7 @@ Level 132 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 132 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %54 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 133 | Problem: Difficulty Spike / Wall
@@ -1003,7 +1007,7 @@ Level 133 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 133 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %78 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 134 | Problem: Difficulty Spike / Wall
@@ -1011,7 +1015,7 @@ Level 134 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 134 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 135 | Problem: Difficulty Spike / Wall
@@ -1019,7 +1023,7 @@ Level 135 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 135 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 136 | Problem: Difficulty Spike / Wall
@@ -1027,7 +1031,7 @@ Level 136 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 136 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %78 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 137 | Problem: Difficulty Spike / Wall
@@ -1035,7 +1039,7 @@ Level 137 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 137 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 138 | Problem: Difficulty Spike / Wall
@@ -1043,7 +1047,7 @@ Level 138 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 138 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 139 | Problem: Difficulty Spike / Wall
@@ -1051,7 +1055,7 @@ Level 139 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 139 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %52 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 140 | Problem: Difficulty Spike / Wall
@@ -1059,7 +1063,7 @@ Level 140 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 140 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %76 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 141 | Problem: Difficulty Spike / Wall
@@ -1067,7 +1071,7 @@ Level 141 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 141 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 142 | Problem: Difficulty Spike / Wall
@@ -1075,7 +1079,7 @@ Level 142 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 142 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 143 | Problem: Difficulty Spike / Wall
@@ -1083,7 +1087,7 @@ Level 143 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 143 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 144 | Problem: Difficulty Spike / Wall
@@ -1091,7 +1095,7 @@ Level 144 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 144 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 145 | Problem: Difficulty Spike / Wall
@@ -1099,7 +1103,7 @@ Level 145 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 145 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 146 | Problem: Difficulty Spike / Wall
@@ -1107,7 +1111,7 @@ Level 146 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 146 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 147 | Problem: Difficulty Spike / Wall
@@ -1123,7 +1127,7 @@ Level 148 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 148 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 149 | Problem: Difficulty Spike / Wall
@@ -1131,7 +1135,7 @@ Level 149 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 149 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 150 | Problem: Difficulty Spike / Wall
@@ -1139,7 +1143,7 @@ Level 150 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 150 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 151 | Problem: Difficulty Spike / Wall
@@ -1147,7 +1151,7 @@ Level 151 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 151 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 152 | Problem: Difficulty Spike / Wall
@@ -1155,7 +1159,7 @@ Level 152 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 152 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 153 | Problem: Difficulty Spike / Wall
@@ -1163,7 +1167,7 @@ Level 153 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 153 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 154 | Problem: Difficulty Spike / Wall
@@ -1171,7 +1175,7 @@ Level 154 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 154 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 155 | Problem: Difficulty Spike / Wall
@@ -1179,7 +1183,7 @@ Level 155 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 155 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %80 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 156 | Problem: Difficulty Spike / Wall
@@ -1187,7 +1191,7 @@ Level 156 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 156 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 157 | Problem: Difficulty Spike / Wall
@@ -1195,7 +1199,7 @@ Level 157 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 157 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 158 | Problem: Difficulty Spike / Wall
@@ -1203,7 +1207,7 @@ Level 158 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 158 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 159 | Problem: Difficulty Spike / Wall
@@ -1211,7 +1215,7 @@ Level 159 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 159 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 160 | Problem: Difficulty Spike / Wall
@@ -1219,7 +1223,7 @@ Level 160 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 160 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 161 | Problem: Difficulty Spike / Wall
@@ -1227,7 +1231,7 @@ Level 161 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 161 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %66 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 162 | Problem: Difficulty Spike / Wall
@@ -1235,7 +1239,7 @@ Level 162 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 162 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 163 | Problem: Difficulty Spike / Wall
@@ -1243,7 +1247,7 @@ Level 163 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 163 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %50 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 164 | Problem: Difficulty Spike / Wall
@@ -1251,7 +1255,7 @@ Level 164 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 164 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 165 | Problem: Difficulty Spike / Wall
@@ -1259,7 +1263,7 @@ Level 165 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 165 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 166 | Problem: Difficulty Spike / Wall
@@ -1267,7 +1271,7 @@ Level 166 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 166 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 167 | Problem: Difficulty Spike / Wall
@@ -1275,7 +1279,7 @@ Level 167 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 167 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 168 | Problem: Difficulty Spike / Wall
@@ -1283,7 +1287,7 @@ Level 168 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 168 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 169 | Problem: Difficulty Spike / Wall
@@ -1299,7 +1303,7 @@ Level 170 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 170 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 171 | Problem: Difficulty Spike / Wall
@@ -1307,7 +1311,7 @@ Level 171 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 171 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %74 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 172 | Problem: Difficulty Spike / Wall
@@ -1323,7 +1327,7 @@ Level 173 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 173 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 174 | Problem: Difficulty Spike / Wall
@@ -1331,7 +1335,7 @@ Level 174 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 174 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 175 | Problem: Difficulty Spike / Wall
@@ -1339,7 +1343,7 @@ Level 175 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 175 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %54 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 176 | Problem: Difficulty Spike / Wall
@@ -1347,7 +1351,7 @@ Level 176 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 176 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 177 | Problem: Difficulty Spike / Wall
@@ -1355,7 +1359,7 @@ Level 177 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 177 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %56 of runs.
+  - Details: Players time out in %48 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 178 | Problem: Difficulty Spike / Wall
@@ -1363,7 +1367,7 @@ Level 178 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 178 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 179 | Problem: Difficulty Spike / Wall
@@ -1371,7 +1375,7 @@ Level 179 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 179 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %68 of runs.
+  - Details: Players time out in %62 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 180 | Problem: Difficulty Spike / Wall
@@ -1379,7 +1383,7 @@ Level 180 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 180 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 181 | Problem: Difficulty Spike / Wall
@@ -1403,7 +1407,7 @@ Level 183 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 183 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 184 | Problem: Difficulty Spike / Wall
@@ -1419,7 +1423,7 @@ Level 185 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 185 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 186 | Problem: Difficulty Spike / Wall
@@ -1435,7 +1439,7 @@ Level 187 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 187 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %80 of runs.
+  - Details: Players time out in %64 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 188 | Problem: Difficulty Spike / Wall
@@ -1443,7 +1447,7 @@ Level 188 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 188 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %48 of runs.
+  - Details: Players time out in %58 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 189 | Problem: Difficulty Spike / Wall
@@ -1451,7 +1455,7 @@ Level 189 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 189 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 190 | Problem: Difficulty Spike / Wall
@@ -1459,7 +1463,7 @@ Level 190 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 190 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %60 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 191 | Problem: Difficulty Spike / Wall
@@ -1467,7 +1471,7 @@ Level 191 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 191 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %58 of runs.
+  - Details: Players time out in %72 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 192 | Problem: Difficulty Spike / Wall
@@ -1475,7 +1479,7 @@ Level 192 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 192 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %60 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 193 | Problem: Difficulty Spike / Wall
@@ -1483,7 +1487,7 @@ Level 193 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 193 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %72 of runs.
+  - Details: Players time out in %52 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 194 | Problem: Difficulty Spike / Wall
@@ -1491,7 +1495,7 @@ Level 194 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 194 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %64 of runs.
+  - Details: Players time out in %70 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 195 | Problem: Difficulty Spike / Wall
@@ -1499,7 +1503,7 @@ Level 195 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 195 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %48 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 196 | Problem: Difficulty Spike / Wall
@@ -1507,7 +1511,7 @@ Level 196 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 196 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %70 of runs.
+  - Details: Players time out in %56 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 197 | Problem: Difficulty Spike / Wall
@@ -1515,7 +1519,7 @@ Level 197 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 197 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %76 of runs.
+  - Details: Players time out in %54 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 198 | Problem: Difficulty Spike / Wall
@@ -1523,7 +1527,7 @@ Level 198 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 198 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %68 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 199 | Problem: Difficulty Spike / Wall
@@ -1531,7 +1535,7 @@ Level 199 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 199 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %74 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
 Level 200 | Problem: Difficulty Spike / Wall
@@ -1539,6 +1543,6 @@ Level 200 | Problem: Difficulty Spike / Wall
   - Suggested Fix: Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale.
 
 Level 200 | Problem: Time Problem / Timeouts
-  - Details: Players time out in %62 of runs.
+  - Details: Players time out in %66 of runs.
   - Suggested Fix: Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls.
 
