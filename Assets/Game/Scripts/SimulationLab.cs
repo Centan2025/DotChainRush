@@ -34,7 +34,25 @@ public class SimulationLab
         for (int i = 0; i < 10000; i++)
         {
             int levelNum = (i % 200) + 1;
-            LevelConfig config = director != null ? director.GenerateLevel(levelNum) : WorldDirector.Instance.GenerateLevel(levelNum);
+            LevelConfig config = null;
+            if (director != null)
+            {
+                config = director.GenerateLevel(levelNum);
+            }
+            else if (WorldDirector.Instance != null)
+            {
+                config = WorldDirector.Instance.GenerateLevel(levelNum);
+            }
+            else
+            {
+                // Fallback config when WorldDirector is not initialized yet during Awake/InitializeEngine
+                config = new LevelConfig();
+                config.id = levelNum;
+                config.baseTimer = 60f;
+                config.spawnRate = 1.5f;
+                config.targetScore = levelNum * 150;
+                config.difficultyRating = 1.0f;
+            }
 
             if (!levelAttempts.ContainsKey(levelNum))
             {
