@@ -11,6 +11,7 @@ public class DifficultyManager : MonoBehaviour
     // Dynamic gameplay variables from LevelData
     public float SpawnInterval { get; private set; } = 0.85f;
     public float GravityScale { get; private set; } = 0.12f;
+    public float ConnectionCooldown { get; private set; } = 0f;
     public float SpecialDotChance { get; private set; } = 0f;
     public float FastDotChance { get; private set; } = 0f;
     public float ObstacleChance { get; private set; } = 0f;
@@ -90,6 +91,7 @@ public class DifficultyManager : MonoBehaviour
                 LevelTitle = config.theme;
                 LevelSubtitle = config.isBossLevel ? "BOSS FIGHT" : "LEVEL " + config.id;
                 PhaseName = config.isBossLevel ? "Boss" : "Mücadele";
+                ConnectionCooldown = 0.25f + Mathf.Min(0.35f, 0.04f * (ActiveLevel - 1));
                 return;
             }
         }
@@ -108,6 +110,7 @@ public class DifficultyManager : MonoBehaviour
         LevelTitle = info.Title;
         LevelSubtitle = info.Subtitle;
         PhaseName = info.PhaseName;
+        ConnectionCooldown = 0.25f + Mathf.Min(0.35f, 0.04f * (ActiveLevel - 1));
     }
 
     public string GetLevelPreviewText(int nextLvl)

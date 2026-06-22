@@ -726,4 +726,366 @@ public class UIManager : MonoBehaviour
             }
         }
     }
+
+    private TextMeshProUGUI bossHUDText;
+    private TextMeshProUGUI bossWarningText;
+    private GameObject bossHUDPanel;
+
+    private GameObject bossRewardOverlay;
+    private TextMeshProUGUI bossRewardTitle;
+    private Button buttonOptionA;
+    private Button buttonOptionB;
+    private Button buttonOptionC;
+    private TextMeshProUGUI textOptionA;
+    private TextMeshProUGUI textOptionB;
+    private TextMeshProUGUI textOptionC;
+    private System.Action onBossRewardSelectedCallback;
+
+    private void Update()
+    {
+        if (BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive)
+        {
+            if (BossDimensionUI.Instance != null)
+            {
+                // Let the new custom UI handle it
+                if (bossHUDPanel != null && bossHUDPanel.activeSelf) bossHUDPanel.SetActive(false);
+                BossDimensionUI.Instance.ShowBossHUD(true);
+            }
+            else
+            {
+                if (bossHUDPanel == null)
+                {
+                    SetupBossHUD();
+                }
+
+                if (bossHUDPanel != null && !bossHUDPanel.activeSelf)
+                {
+                    bossHUDPanel.SetActive(true);
+                }
+
+                if (bossHUDText != null)
+                {
+                    bossHUDText.text = BossDimensionManager.Instance.GetBossHUDValue();
+                }
+
+                if (bossWarningText != null)
+                {
+                    bossWarningText.text = BossDimensionManager.Instance.GetBossWarning();
+                }
+            }
+        }
+        else
+        {
+            if (bossHUDPanel != null && bossHUDPanel.activeSelf)
+            {
+                bossHUDPanel.SetActive(false);
+            }
+            if (BossDimensionUI.Instance != null)
+            {
+                BossDimensionUI.Instance.ShowBossHUD(false);
+            }
+        }
+    }
+
+    private void SetupBossHUD()
+    {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
+        bossHUDPanel = new GameObject("BossHUDPanel", typeof(RectTransform));
+        bossHUDPanel.transform.SetParent(canvas.transform, false);
+
+        RectTransform panelRect = bossHUDPanel.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.5f, 1f);
+        panelRect.anchorMax = new Vector2(0.5f, 1f);
+        panelRect.pivot = new Vector2(0.5f, 1f);
+        panelRect.anchoredPosition = new Vector2(0f, -100f);
+        panelRect.sizeDelta = new Vector2(350f, 60f);
+
+        GameObject valueObj = new GameObject("BossHUDText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        valueObj.transform.SetParent(bossHUDPanel.transform, false);
+        bossHUDText = valueObj.GetComponent<TextMeshProUGUI>();
+        bossHUDText.alignment = TextAlignmentOptions.Center;
+        bossHUDText.fontSize = 22f;
+        bossHUDText.color = Color.cyan;
+        bossHUDText.fontStyle = FontStyles.Bold;
+
+        RectTransform valueRect = valueObj.GetComponent<RectTransform>();
+        valueRect.anchorMin = new Vector2(0f, 0.5f);
+        valueRect.anchorMax = new Vector2(1f, 0.5f);
+        valueRect.anchoredPosition = new Vector2(0f, 15f);
+        valueRect.sizeDelta = new Vector2(0f, 30f);
+
+        GameObject warningObj = new GameObject("BossWarningText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        warningObj.transform.SetParent(bossHUDPanel.transform, false);
+        bossWarningText = warningObj.GetComponent<TextMeshProUGUI>();
+        bossWarningText.alignment = TextAlignmentOptions.Center;
+        bossWarningText.fontSize = 16f;
+        bossWarningText.color = Color.red;
+        bossWarningText.fontStyle = FontStyles.Bold | FontStyles.Italic;
+
+        RectTransform warningRect = warningObj.GetComponent<RectTransform>();
+        warningRect.anchorMin = new Vector2(0f, 0.5f);
+        warningRect.anchorMax = new Vector2(1f, 0.5f);
+        warningRect.anchoredPosition = new Vector2(0f, -15f);
+        warningRect.sizeDelta = new Vector2(0f, 30f);
+    }
+
+    public void ShowBossRewardOverlay(int bossLevel, System.Action onComplete)
+    {
+        onBossRewardSelectedCallback = onComplete;
+
+        if (bossRewardOverlay == null)
+        {
+            SetupBossRewardOverlay();
+        }
+
+        if (bossRewardOverlay != null)
+        {
+            bossRewardOverlay.SetActive(true);
+        }
+
+        string optAText = "+10% Score Multiplier";
+        string optBText = "+10s Level Time";
+        string optCText = "+50 Gold Coins";
+
+        if (bossLevel == 10)
+        {
+            optAText = "CORE ENGINE\n+30% Bomb Spawn Rate";
+            optBText = "CHRONO DRIFT\n+20s Level Time";
+            optCText = "VOID COMPRESSOR\nUnlock Void Ball";
+        }
+        else if (bossLevel == 30)
+        {
+            optAText = "FORCE CONDUIT\n+15% Score Multiplier";
+            optBText = "ELEMENT SHIELD\nImmune to hazard damage";
+            optCText = "PLASMA CORE\nUnlock Electric Ball";
+        }
+        else if (bossLevel == 50)
+        {
+            optAText = "PULL MATRIX\n+35% Magnet Spawn Rate";
+            optBText = "FLOW CONTROL\nSlower horizontal streams";
+            optCText = "RIFT PORTAL\nUnlock Teleport Ball";
+        }
+        else if (bossLevel == 70)
+        {
+            optAText = "TEMPORAL FLUX\n+15s Level Time";
+            optBText = "TIME WARP MASTERY\nSlow mo lasts 50% longer";
+            optCText = "TIME BENDER\nUnlock Time Bender Ball";
+        }
+        else if (bossLevel == 100)
+        {
+            optAText = "VOID VISION\nVoid dots glow brighter";
+            optBText = "PRISM GENERATOR\n+30% Rainbow Spawn Rate";
+            optCText = "QUANTUM CORE\nUnlock Quantum Ball";
+        }
+        else if (bossLevel == 120)
+        {
+            optAText = "GLITCH FILTER\nRGB split effects filtered";
+            optBText = "FEVER ENERGY\n+25% Fever Duration";
+            optCText = "GLITCH SHARD\nUnlock Glitch Ball";
+        }
+        else if (bossLevel == 140)
+        {
+            optAText = "GRAVITY ANCHOR\nSlower gravity changes";
+            optBText = "MAGNET STRENGTH\n+25% Magnet force";
+            optCText = "GRAVITY CORE\nUnlock Gravity Core Ball";
+        }
+        else if (bossLevel == 160)
+        {
+            optAText = "FIREWALL\nPrevents Virus spread";
+            optBText = "ARSENAL BOOST\n+40% Bomb Spawn Rate";
+            optCText = "OMEGA NODE\nUnlock Omega Ball";
+        }
+        else if (bossLevel == 180)
+        {
+            optAText = "JACKPOT CACHE\n+100 Gold Coins";
+            optBText = "PRESTIGE SIGNATURE\nAll scores +25%";
+            optCText = "PRESTIGE SHOT\nUnlock Prestige Ball";
+        }
+
+        if (textOptionA != null) textOptionA.text = optAText;
+        if (textOptionB != null) textOptionB.text = optBText;
+        if (textOptionC != null) textOptionC.text = optCText;
+
+        if (buttonOptionA != null)
+        {
+            buttonOptionA.onClick.RemoveAllListeners();
+            buttonOptionA.onClick.AddListener(() => SelectRewardOption('A', bossLevel));
+        }
+        if (buttonOptionB != null)
+        {
+            buttonOptionB.onClick.RemoveAllListeners();
+            buttonOptionB.onClick.AddListener(() => SelectRewardOption('B', bossLevel));
+        }
+        if (buttonOptionC != null)
+        {
+            buttonOptionC.onClick.RemoveAllListeners();
+            buttonOptionC.onClick.AddListener(() => SelectRewardOption('C', bossLevel));
+        }
+    }
+
+    private void SelectRewardOption(char option, int bossLevel)
+    {
+        if (GameBrain.Instance == null)
+        {
+            if (bossRewardOverlay != null) bossRewardOverlay.SetActive(false);
+            onBossRewardSelectedCallback?.Invoke();
+            return;
+        }
+
+        if (bossLevel == 10)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("BombChanceMod", 0.05f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("TimeLimitMod", 20f);
+            else GameBrain.Instance.AddMutation("UnlockVoidBall", 1f);
+        }
+        else if (bossLevel == 30)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("ScoreMod", 0.15f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("ElementShield", 1f);
+            else GameBrain.Instance.AddMutation("UnlockElectricBall", 1f);
+        }
+        else if (bossLevel == 50)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("MagnetChanceMod", 0.08f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("FlowControl", 1f);
+            else GameBrain.Instance.AddMutation("UnlockTeleportBall", 1f);
+        }
+        else if (bossLevel == 70)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("TimeLimitMod", 15f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("TimeWarpMastery", 1f);
+            else GameBrain.Instance.AddMutation("UnlockTimeBenderBall", 1f);
+        }
+        else if (bossLevel == 100)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("NightVision", 1f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("RainbowChanceMod", 0.05f);
+            else GameBrain.Instance.AddMutation("UnlockQuantumBall", 1f);
+        }
+        else if (bossLevel == 120)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("GlitchShield", 1f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("FeverDurationMod", 1.25f);
+            else GameBrain.Instance.AddMutation("UnlockGlitchBall", 1f);
+        }
+        else if (bossLevel == 140)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("GravityAnchor", 1f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("MagnetForceMod", 1.25f);
+            else GameBrain.Instance.AddMutation("UnlockGravityCoreBall", 1f);
+        }
+        else if (bossLevel == 160)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("AntiVirus", 1f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("BombChanceMod", 0.08f);
+            else GameBrain.Instance.AddMutation("UnlockOmegaBall", 1f);
+        }
+        else if (bossLevel == 180)
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("GoldMod", 100f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("PrestigeBoost", 1f);
+            else GameBrain.Instance.AddMutation("UnlockPrestigeBall", 1f);
+        }
+        else
+        {
+            if (option == 'A') GameBrain.Instance.AddMutation("ScoreMod", 0.1f);
+            else if (option == 'B') GameBrain.Instance.AddMutation("TimeLimitMod", 10f);
+            else GameBrain.Instance.AddMutation("GoldMod", 50f);
+        }
+
+        if (bossRewardOverlay != null) bossRewardOverlay.SetActive(false);
+        onBossRewardSelectedCallback?.Invoke();
+    }
+
+    private void SetupBossRewardOverlay()
+    {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) return;
+
+        bossRewardOverlay = new GameObject("BossRewardOverlay", typeof(RectTransform));
+        bossRewardOverlay.transform.SetParent(canvas.transform, false);
+
+        RectTransform overlayRect = bossRewardOverlay.GetComponent<RectTransform>();
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.sizeDelta = Vector2.zero;
+        overlayRect.anchoredPosition = Vector2.zero;
+
+        Image bgImage = bossRewardOverlay.AddComponent<Image>();
+        bgImage.color = new Color(0.04f, 0.03f, 0.08f, 0.98f);
+
+        GameObject titleObj = new GameObject("BossRewardTitle", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        titleObj.transform.SetParent(bossRewardOverlay.transform, false);
+        bossRewardTitle = titleObj.GetComponent<TextMeshProUGUI>();
+        bossRewardTitle.alignment = TextAlignmentOptions.Center;
+        bossRewardTitle.fontSize = 26f;
+        bossRewardTitle.color = new Color(1f, 0.85f, 0f);
+        bossRewardTitle.fontStyle = FontStyles.Bold | FontStyles.Italic;
+        bossRewardTitle.text = "👑 BOSS DEFEATED!\n<size=70%>CHOOSE YOUR EVOLUTION REWARD</size>";
+
+        RectTransform titleRect = titleObj.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0f, 0.8f);
+        titleRect.anchorMax = new Vector2(1f, 0.95f);
+        titleRect.anchoredPosition = Vector2.zero;
+        titleRect.sizeDelta = Vector2.zero;
+
+        GameObject listContainer = new GameObject("RewardList", typeof(RectTransform));
+        listContainer.transform.SetParent(bossRewardOverlay.transform, false);
+        RectTransform listRect = listContainer.GetComponent<RectTransform>();
+        listRect.anchorMin = new Vector2(0.1f, 0.2f);
+        listRect.anchorMax = new Vector2(0.9f, 0.7f);
+        listRect.sizeDelta = Vector2.zero;
+        listRect.anchoredPosition = Vector2.zero;
+
+        CreateOptionButton(listContainer.transform, out buttonOptionA, out textOptionA, 110f);
+        CreateOptionButton(listContainer.transform, out buttonOptionB, out textOptionB, 0f);
+        CreateOptionButton(listContainer.transform, out buttonOptionC, out textOptionC, -110f);
+    }
+
+    private void CreateOptionButton(Transform parent, out Button button, out TextMeshProUGUI text, float yOffset)
+    {
+        GameObject btnObj = new GameObject("OptionButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+        btnObj.transform.SetParent(parent, false);
+
+        RectTransform btnRect = btnObj.GetComponent<RectTransform>();
+        btnRect.anchorMin = new Vector2(0f, 0.5f);
+        btnRect.anchorMax = new Vector2(1f, 0.5f);
+        btnRect.anchoredPosition = new Vector2(0f, yOffset);
+        btnRect.sizeDelta = new Vector2(0f, 85f);
+
+        Image img = btnObj.GetComponent<Image>();
+        img.color = new Color(0.12f, 0.08f, 0.22f, 0.95f);
+
+        GameObject outline = new GameObject("Outline", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        outline.transform.SetParent(btnObj.transform, false);
+        RectTransform outRect = outline.GetComponent<RectTransform>();
+        outRect.anchorMin = Vector2.zero;
+        outRect.anchorMax = Vector2.one;
+        outRect.sizeDelta = new Vector2(4f, 4f);
+        outRect.anchoredPosition = Vector2.zero;
+        Image outImg = outline.GetComponent<Image>();
+        outImg.color = new Color(0.0f, 0.85f, 1f, 0.4f);
+        outline.transform.SetAsFirstSibling();
+
+        button = btnObj.GetComponent<Button>();
+        Navigation nav = button.navigation;
+        nav.mode = Navigation.Mode.None;
+        button.navigation = nav;
+
+        GameObject txtObj = new GameObject("OptionText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        txtObj.transform.SetParent(btnObj.transform, false);
+        text = txtObj.GetComponent<TextMeshProUGUI>();
+        text.alignment = TextAlignmentOptions.Center;
+        text.fontSize = 18f;
+        text.color = Color.white;
+        text.fontStyle = FontStyles.Bold;
+
+        RectTransform txtRect = txtObj.GetComponent<RectTransform>();
+        txtRect.anchorMin = Vector2.zero;
+        txtRect.anchorMax = Vector2.one;
+        txtRect.sizeDelta = Vector2.zero;
+        txtRect.anchoredPosition = Vector2.zero;
+    }
 }

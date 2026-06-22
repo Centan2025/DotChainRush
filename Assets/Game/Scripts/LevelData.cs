@@ -73,9 +73,9 @@ public static class LevelData
                 spawnInterval: 0.48f, gravity: 0.32f, special: 0.08f, fast: 0.18f, obstacle: 0.10f, bomb: 0.04f,
                 preview: "Renk kilidi aktif! Bir renk kilitlenir, önce anahtar topu bul!"),
 
-            10 => Make(10, "Chaos Orb", "BOSS I", "Yeni Mekanikler", 20000,
+            10 => Make(10, "Chaos Orb", "BOSS DIMENSION", "First Reality Distortion Event", 20800,
                 spawnInterval: 0.45f, gravity: 0.35f, special: 0.10f, fast: 0.20f, obstacle: 0.12f, bomb: 0.04f,
-                preview: "BOSS: Kaos Küresi! Ortada büyüyen dev küreyi yenmek için 50 combo gerekiyor!"),
+                preview: "BOSS: Kaos Küresi! Oyun sana karşı savaşıyor. Kaos stabilitesini sıfıra indir ve 20800 puana ulaş!"),
 
             // ════════════════════════════════════════════
             // PHASE 3: ELEMENTS (Level 11-20)

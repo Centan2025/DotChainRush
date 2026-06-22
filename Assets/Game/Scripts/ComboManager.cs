@@ -29,6 +29,11 @@ public class ComboManager : MonoBehaviour
     {
         if (chain == null || chain.Count < 3) return;
 
+        if (BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive)
+        {
+            BossDimensionManager.Instance.OnChainProcessed(chain);
+        }
+
         int length = chain.Count;
         if (GameManager.Instance != null)
         {
@@ -45,6 +50,19 @@ public class ComboManager : MonoBehaviour
         if (GameManager.Instance != null && GameManager.Instance.IsFeverActive)
         {
             points *= 10; // FEVER x10 SCORE MULTIPLIER!
+        }
+
+        // ChainLimiter score penalty
+        if (BossDimensionManager.Instance != null && 
+            BossDimensionManager.Instance.IsBossLevelActive && 
+            BossDimensionManager.Instance.Adaptation.counterAbility == "ChainLimiter" && 
+            length >= 6)
+        {
+            points /= 2;
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowComboFeedback("CHAIN LIMITER: POINTS HALVED!", Color.red);
+            }
         }
 
         if (ScoreManager.Instance != null)
@@ -194,28 +212,40 @@ public class ComboManager : MonoBehaviour
         // Trigger Bomb Pop logic
         if (hasBomb)
         {
-            List<Dot> bombTargets = new List<Dot>();
-            if (DotSpawner.Instance != null)
+            if (BossDimensionManager.Instance != null && 
+                BossDimensionManager.Instance.IsBossLevelActive && 
+                BossDimensionManager.Instance.Adaptation.counterAbility == "BombShield")
             {
-                List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
-                foreach (Dot dot in snapshot)
+                if (UIManager.Instance != null)
                 {
-                    if (dot != null && !chain.Contains(dot))
+                    UIManager.Instance.ShowComboFeedback("BOMB SHIELDED!", Color.magenta);
+                }
+            }
+            else
+            {
+                List<Dot> bombTargets = new List<Dot>();
+                if (DotSpawner.Instance != null)
+                {
+                    List<Dot> snapshot = new List<Dot>(DotSpawner.Instance.ActiveDots);
+                    foreach (Dot dot in snapshot)
                     {
-                        if (Vector2.Distance(dot.transform.position, bombPosition) <= bombRadius)
+                        if (dot != null && !chain.Contains(dot))
                         {
-                            bombTargets.Add(dot);
+                            if (Vector2.Distance(dot.transform.position, bombPosition) <= bombRadius)
+                            {
+                                bombTargets.Add(dot);
+                            }
                         }
                     }
                 }
-            }
-            foreach (Dot target in bombTargets)
-            {
-                if (target != null)
+                foreach (Dot target in bombTargets)
                 {
-                    Color targetColor = target.IsMetal ? Color.gray : (target.IsFrozen ? Color.cyan : (ColorManager.Instance != null ? ColorManager.Instance.GetColor(target.ColorId) : Color.white));
-                    SpawnExplosion(target.transform.position, targetColor, 20);
-                    target.DestroyDot();
+                    if (target != null)
+                    {
+                        Color targetColor = target.IsMetal ? Color.gray : (target.IsFrozen ? Color.cyan : (ColorManager.Instance != null ? ColorManager.Instance.GetColor(target.ColorId) : Color.white));
+                        SpawnExplosion(target.transform.position, targetColor, 20);
+                        target.DestroyDot();
+                    }
                 }
             }
         }
@@ -347,6 +377,51 @@ public class ComboManager : MonoBehaviour
         return sum / chain.Count;
     }
 
+    private static Sprite metalShardSprite;
+
+    private Sprite GetMetalShardSprite()
+    {
+        if (metalShardSprite != null) return metalShardSprite;
+
+        // Create a 32x32 texture representing an elegant 4-pointed star sparkle flare
+        Texture2D tex = new Texture2D(32, 32, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+
+        for (int y = 0; y < 32; y++)
+        {
+            for (int x = 0; x < 32; x++)
+            {
+                float dx = (x - 15.5f) / 15.5f;
+                float dy = (y - 15.5f) / 15.5f;
+                float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                // Star flare calculation: horizontal and vertical thin glowing rays
+                float flareX = Mathf.Max(0f, 1f - Mathf.Abs(dx) * 1.3f) * Mathf.Max(0f, 1f - Mathf.Abs(dy) * 6.5f);
+                float flareY = Mathf.Max(0f, 1f - Mathf.Abs(dy) * 1.3f) * Mathf.Max(0f, 1f - Mathf.Abs(dx) * 6.5f);
+                // Central bright core
+                float core = Mathf.Max(0f, 1f - dist * 1.8f);
+
+                float intensity = Mathf.Clamp01(flareX + flareY + core);
+
+                if (intensity > 0.05f)
+                {
+                    // High-end UI sparkle color blending (white hot core fading to bright edge)
+                    float spec = Mathf.Pow(intensity, 2f);
+                    float finalVal = Mathf.Clamp01(intensity * 0.6f + spec * 0.4f);
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, finalVal));
+                }
+                else
+                {
+                    tex.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        tex.Apply();
+
+        metalShardSprite = Sprite.Create(tex, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f), 32f);
+        return metalShardSprite;
+    }
+
     public void SpawnExplosion(Vector3 position, Color color, int count)
     {
         if (particlePrefab == null) return;
@@ -357,6 +432,21 @@ public class ComboManager : MonoBehaviour
         {
             var main = ps.main;
             main.startColor = color;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.24f, 0.58f); // Larger, more visible metallic shards
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.9f); // Lives slightly longer to show off spin
+
+            // Enable dynamic rotation over lifetime to spin the metal shards
+            var rotationOverLifetime = ps.rotationOverLifetime;
+            rotationOverLifetime.enabled = true;
+            rotationOverLifetime.z = new ParticleSystem.MinMaxCurve(-450f, 450f); // Spin even faster for glint effect
+
+            // Assign the shiny metallic shard sprite to the particle system
+            var textureSheet = ps.textureSheetAnimation;
+            if (textureSheet.enabled)
+            {
+                textureSheet.SetSprite(0, GetMetalShardSprite());
+            }
+
             var emission = ps.emission;
             emission.burstCount = 1;
             emission.SetBurst(0, new ParticleSystem.Burst(0f, count));
@@ -427,17 +517,43 @@ public class ComboManager : MonoBehaviour
         slowMoCoroutine = null;
     }
 
+    public int collectedTimeBonusCount = 0;
+
+    public void ResetComboManager()
+    {
+        collectedTimeBonusCount = 0;
+    }
+
     private void AddTimeToTimer(float seconds)
     {
+        float boost = 0f;
+        if (GameBrain.Instance != null)
+        {
+            boost = GameBrain.Instance.GetMutationValue("TimeBallBoost");
+        }
+        seconds *= (1f + boost);
+
+        float factor = 1.0f;
+        if (collectedTimeBonusCount == 1) factor = 0.7f;
+        else if (collectedTimeBonusCount == 2) factor = 0.4f;
+        else if (collectedTimeBonusCount >= 3) factor = 0.1f;
+
+        collectedTimeBonusCount++;
+        float scaledSeconds = seconds * factor;
+
         var rtc = FindAnyObjectByType<RadialTimerController>();
         if (rtc != null)
         {
-            rtc.CurrentTime = Mathf.Min(rtc.totalTime, rtc.CurrentTime + seconds);
+            float targetTime = Mathf.Clamp(rtc.CurrentTime + scaledSeconds, 0f, 150f);
+            rtc.CurrentTime = targetTime;
+            rtc.totalTime = Mathf.Clamp(rtc.totalTime, 30f, 150f);
         }
         var ct = FindAnyObjectByType<CircularTimer>();
         if (ct != null)
         {
-            ct.CurrentTime = Mathf.Min(90f, ct.CurrentTime + seconds);
+            float targetTime = Mathf.Clamp(ct.CurrentTime + scaledSeconds, 0f, 150f);
+            ct.CurrentTime = targetTime;
+            ct.totalTime = Mathf.Clamp(ct.totalTime, 30f, 150f);
         }
     }
 

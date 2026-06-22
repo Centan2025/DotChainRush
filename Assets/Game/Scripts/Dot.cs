@@ -22,9 +22,11 @@ public class Dot : MonoBehaviour
     [SerializeField] private Sprite normalSprite;
     [SerializeField] private Sprite specialSprite;
     [SerializeField] private Sprite obstacleSprite;
+    [SerializeField] private Sprite starSprite;
 
     public int ColorId { get; private set; }
     public bool IsSelected { get; private set; }
+    public float SelectionProgress { get; set; } = 1.0f;
     public DotType Type { get; private set; } = DotType.KirmiziTop;
 
     public bool IsSpecial => Type == DotType.Gokkusagi || Type == DotType.VoidRainbow || Type == DotType.Sonsuzluk;
@@ -44,7 +46,9 @@ public class Dot : MonoBehaviour
     private Transform smokeTransform;
     private Transform visualCore;
     private Transform highlightTransform;
+    private Transform starSparkle;
     private float currentVisualCoreScale = 1.0f;
+    private LineRenderer progressLine;
 
     private void Awake()
     {
@@ -61,6 +65,10 @@ public class Dot : MonoBehaviour
         if (circleCollider == null) circleCollider = GetComponent<CircleCollider2D>();
         rb = GetComponent<Rigidbody2D>();
         specialRing = transform.Find("SpecialRing");
+        if (specialRing != null)
+        {
+            starSparkle = specialRing.Find("StarSparkle");
+        }
         smokeTransform = transform.Find("Smoke");
         highlightTransform = transform.Find("Highlight");
     }
@@ -83,6 +91,7 @@ public class Dot : MonoBehaviour
         // Juiciness: smooth shrunken visual core + concentric neon halo border + cloud-like halo radiating outwards
         if (IsSelected && CurrentAnimState == AnimState.Idle)
         {
+            UpdateProgressCircle();
             Color baseColor = IsSpecial ? Color.white : ColorManager.Instance.GetColor(ColorId);
 
             // Smooth shrink animation for the visual core and highlight to 0.30f
@@ -99,15 +108,54 @@ public class Dot : MonoBehaviour
             if (specialRing != null)
             {
                 specialRing.gameObject.SetActive(true);
-                // Breathe the outer border scale slightly
-                float ringPulse = 1.05f + 0.08f * Mathf.Sin(Time.time * 10f);
-                specialRing.localScale = Vector3.one * ringPulse;
                 
-                SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
-                if (ringSR != null)
+                if (SelectionProgress < 1.0f)
                 {
-                    // Ring glows bright in bubble's own color (slightly intensified)
-                    ringSR.color = new Color(baseColor.r * 1.3f, baseColor.g * 1.3f, baseColor.b * 1.3f, 1.0f);
+                    // Scale from 0 to 1.1 based on progress
+                    specialRing.localScale = Vector3.one * (SelectionProgress * 1.1f);
+                    
+                    // Rotate slower during progress/charging
+                    specialRing.Rotate(Vector3.forward * 45f * Time.deltaTime);
+                    
+                    SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
+                    if (ringSR != null)
+                    {
+                        // Semi-transparent color based on progress
+                        ringSR.color = new Color(baseColor.r, baseColor.g, baseColor.b, SelectionProgress * 0.8f);
+                    }
+                }
+                else
+                {
+                    // Fully charged - breathe the outer border scale slightly
+                    float ringPulse = 1.05f + 0.08f * Mathf.Sin(Time.time * 10f);
+                    specialRing.localScale = Vector3.one * ringPulse;
+                    
+                    // Orbit the star by rotating the special ring
+                    specialRing.Rotate(Vector3.forward * 90f * Time.deltaTime);
+                    
+                    SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
+                    if (ringSR != null)
+                    {
+                        // Ring glows bright in bubble's own color (slightly intensified)
+                        ringSR.color = new Color(baseColor.r * 1.5f, baseColor.g * 1.5f, baseColor.b * 1.5f, 1.0f);
+                    }
+                }
+
+                if (starSparkle != null)
+                {
+                    starSparkle.gameObject.SetActive(true);
+                    // Rapid sparkle pulse for the star
+                    float sparklePulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 25f);
+                    starSparkle.localScale = Vector3.one * (0.25f + sparklePulse * 0.15f);
+                    
+                    // Local spin for the star itself
+                    starSparkle.Rotate(Vector3.forward * -300f * Time.deltaTime);
+                    
+                    SpriteRenderer starSR = starSparkle.GetComponent<SpriteRenderer>();
+                    if (starSR != null)
+                    {
+                        starSR.color = new Color(1f, 1f, 1f, 0.5f + sparklePulse * 0.5f);
+                    }
                 }
             }
 
@@ -338,10 +386,18 @@ public class Dot : MonoBehaviour
         if (specialRing == null) specialRing = transform.Find("SpecialRing");
         if (specialRing != null)
         {
-            specialRing.gameObject.SetActive(IsSpecial || IsBomb);
+            specialRing.gameObject.SetActive(false);
             specialRing.localScale = Vector3.one;
+            specialRing.localRotation = Quaternion.identity;
             SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
             if (ringSR != null) ringSR.color = Color.white;
+            
+            if (starSparkle == null) starSparkle = specialRing.Find("StarSparkle");
+            if (starSparkle != null)
+            {
+                starSparkle.gameObject.SetActive(false);
+                starSparkle.localRotation = Quaternion.identity;
+            }
         }
 
         if (smokeTransform == null) smokeTransform = transform.Find("Smoke");
@@ -418,7 +474,7 @@ public class Dot : MonoBehaviour
             
             if (specialRing != null)
             {
-                specialRing.gameObject.SetActive(true);
+                specialRing.gameObject.SetActive(false);
                 specialRing.localScale = Vector3.one * 1.15f;
                 SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
                 if (ringSR != null) ringSR.color = new Color(1f, 0.05f, 0.0f, 0.95f);
@@ -472,6 +528,60 @@ public class Dot : MonoBehaviour
         }
     }
 
+    private void UpdateProgressCircle()
+    {
+        if (SelectionProgress >= 1.0f || !IsSelected)
+        {
+            if (progressLine != null)
+            {
+                progressLine.gameObject.SetActive(false);
+            }
+            return;
+        }
+
+        if (progressLine == null)
+        {
+            GameObject progressGO = new GameObject("ProgressCircle");
+            progressGO.transform.SetParent(transform, false);
+            progressLine = progressGO.AddComponent<LineRenderer>();
+            progressLine.useWorldSpace = false;
+            progressLine.sortingOrder = 10; // Draw on top
+            
+            if (spriteRenderer != null)
+            {
+                progressLine.sharedMaterial = spriteRenderer.sharedMaterial;
+            }
+            
+            progressLine.startWidth = 0.025f;
+            progressLine.endWidth = 0.025f;
+        }
+
+        progressLine.gameObject.SetActive(true);
+        Color baseColor = IsSpecial ? Color.white : ColorManager.Instance.GetColor(ColorId);
+        Color hdrGlowColor = new Color(baseColor.r * 3.0f, baseColor.g * 3.0f, baseColor.b * 3.0f, 1.0f);
+        progressLine.startColor = hdrGlowColor;
+        progressLine.endColor = hdrGlowColor;
+
+        float radius = 0.35f;
+        int segments = Mathf.Max(2, Mathf.CeilToInt(40 * SelectionProgress));
+        progressLine.positionCount = segments;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float progressFraction = 0f;
+            if (segments > 1)
+            {
+                progressFraction = ((float)i / (segments - 1)) * SelectionProgress;
+            }
+            
+            float angle = (90f - progressFraction * 360f) * Mathf.Deg2Rad;
+            float x = Mathf.Cos(angle) * radius;
+            float y = Mathf.Sin(angle) * radius;
+            
+            progressLine.SetPosition(i, new Vector3(x, y, 0f));
+        }
+    }
+
     public void Select()
     {
         if (CurrentAnimState == AnimState.Shrinking) return;
@@ -499,6 +609,11 @@ public class Dot : MonoBehaviour
     {
         if (CurrentAnimState == AnimState.Shrinking) return;
         IsSelected = false;
+        SelectionProgress = 1.0f;
+        if (progressLine != null)
+        {
+            progressLine.gameObject.SetActive(false);
+        }
 
         SpriteRenderer vcSR = visualCore != null ? visualCore.GetComponent<SpriteRenderer>() : null;
 
@@ -552,10 +667,17 @@ public class Dot : MonoBehaviour
 
         if (specialRing != null)
         {
-            specialRing.gameObject.SetActive(IsSpecial || IsBomb);
+            specialRing.gameObject.SetActive(false);
             specialRing.localScale = Vector3.one;
+            specialRing.localRotation = Quaternion.identity;
             SpriteRenderer ringSR = specialRing.GetComponent<SpriteRenderer>();
             if (ringSR != null) ringSR.color = IsBomb ? new Color(1f, 0.05f, 0.0f, 0.95f) : Color.white;
+            
+            if (starSparkle != null)
+            {
+                starSparkle.gameObject.SetActive(false);
+                starSparkle.localRotation = Quaternion.identity;
+            }
         }
 
         if (smokeTransform != null)
@@ -587,6 +709,11 @@ public class Dot : MonoBehaviour
     public void DestroyDot()
     {
         if (CurrentAnimState == AnimState.Shrinking) return;
+
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.RegisterDotPopped(this);
+        }
         
         // Disable collider immediately so it can't be selected during animation
         if (circleCollider != null)
@@ -707,9 +834,14 @@ public class Dot : MonoBehaviour
         Debug.Log($"[Dot Disable] OnDisable called for {gameObject.name} | Type: {Type} | Position: {transform.position}\n{System.Environment.StackTrace}");
     }
 
-    private void RecycleImmediate()
+    public void RecycleImmediate()
     {
         Debug.Log($"[Dot Recycle] RecycleImmediate called for {gameObject.name} | Type: {Type} | Position: {transform.position}\n{System.Environment.StackTrace}");
+        SelectionProgress = 1.0f;
+        if (progressLine != null)
+        {
+            progressLine.gameObject.SetActive(false);
+        }
         if (animCoroutine != null)
         {
             StopCoroutine(animCoroutine);

@@ -1,8 +1,9 @@
 using UnityEngine;
 
-[RequireComponent(typeof(EdgeCollider2D))]
 public class ScreenBoundsAdaptor : MonoBehaviour
 {
+    private BoxCollider2D leftWall, rightWall, topWall, bottomWall;
+
     private void Start()
     {
         EnsurePlayAreaFrame();
@@ -24,8 +25,12 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null) return;
 
+        // Disable legacy EdgeCollider2D if it exists
         EdgeCollider2D edgeCollider = GetComponent<EdgeCollider2D>();
-        if (edgeCollider == null) return;
+        if (edgeCollider != null)
+        {
+            edgeCollider.enabled = false;
+        }
 
         // Reset transform to ensure local space matches world space
         transform.position = Vector3.zero;
@@ -33,7 +38,6 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         transform.localScale = Vector3.one;
 
         float aspect = cam.aspect;
-
         float orthoHeight = cam.orthographicSize * 2f;
         float orthoWidth = orthoHeight * aspect;
 
@@ -47,33 +51,48 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         float leftX = -halfWidth + sidePadding;
         float rightX = halfWidth - sidePadding;
         float bottomY = -halfHeight + footerHeight;
-        // Walls extend only slightly above the visual frame top — enough to contain
-        // dots being spawned but not so far that dots pile up into the header.
+        
+        // Walls stop exactly at the visual frame top so balls don't overflow into the UI header
         float visualTopY = halfHeight - headerHeight;
-        float wallTopY = halfHeight + 4.0f; // Make walls extend much higher above the screen to prevent dots from spilling over the sides
+        float ceilingY = visualTopY; 
 
-        // U-shape: left wall up, across bottom, right wall up — top is OPEN for spawning
-        // Dots are contained by the three walls; danger system handles game-over before overflow
-        Vector2[] points = new Vector2[]
-        {
-            new Vector2(leftX, wallTopY),
-            new Vector2(leftX, bottomY),
-            new Vector2(rightX, bottomY),
-            new Vector2(rightX, wallTopY)
-        };
-        edgeCollider.points = points;
+        // Create 4 thick BoxColliders to prevent any physics tunneling at corners
+        float thickness = 5.0f; // Extremely thick walls
 
-        // Thick edge radius prevents dots from tunneling through thin walls under pressure
-        edgeCollider.edgeRadius = 0.05f;
+        if (leftWall == null) leftWall = gameObject.AddComponent<BoxCollider2D>();
+        if (rightWall == null) rightWall = gameObject.AddComponent<BoxCollider2D>();
+        if (bottomWall == null) bottomWall = gameObject.AddComponent<BoxCollider2D>();
+        if (topWall == null) topWall = gameObject.AddComponent<BoxCollider2D>();
 
-        // Zero-friction material so dots slide down walls smoothly
-        if (edgeCollider.sharedMaterial == null || edgeCollider.sharedMaterial.friction != 0f)
-        {
-            PhysicsMaterial2D mat = new PhysicsMaterial2D("ScreenBoundsPhysicsMaterial");
-            mat.friction = 0f;
-            mat.bounciness = 0.1f;
-            edgeCollider.sharedMaterial = mat;
-        }
+        PhysicsMaterial2D mat = new PhysicsMaterial2D("ScreenBoundsPhysicsMaterial");
+        mat.friction = 0f;
+        mat.bounciness = 0.1f;
+
+        leftWall.sharedMaterial = mat;
+        rightWall.sharedMaterial = mat;
+        bottomWall.sharedMaterial = mat;
+        topWall.sharedMaterial = mat;
+
+        float centerX = (leftX + rightX) / 2f;
+        float centerY = (bottomY + ceilingY) / 2f;
+        float width = rightX - leftX;
+        float height = ceilingY - bottomY;
+
+        // Left Wall
+        leftWall.size = new Vector2(thickness, height + thickness * 2);
+        leftWall.offset = new Vector2(leftX - thickness / 2f, centerY);
+
+        // Right Wall
+        rightWall.size = new Vector2(thickness, height + thickness * 2);
+        rightWall.offset = new Vector2(rightX + thickness / 2f, centerY);
+
+        // Bottom Wall
+        bottomWall.size = new Vector2(width + thickness * 2, thickness);
+        bottomWall.offset = new Vector2(centerX, bottomY - thickness / 2f);
+
+        // Top Ceiling Wall
+        topWall.size = new Vector2(width + thickness * 2, thickness);
+        topWall.offset = new Vector2(centerX, ceilingY + thickness / 2f);
 
         // Dynamically adjust DotSpawner spawn limits and spawn height
         if (DotSpawner.Instance != null)
@@ -128,3 +147,4 @@ public class ScreenBoundsAdaptor : MonoBehaviour
         Gizmos.DrawLine(new Vector3(leftX + spawnMargin, spawnY, 0), new Vector3(rightX - spawnMargin, spawnY, 0));
     }
 }
+

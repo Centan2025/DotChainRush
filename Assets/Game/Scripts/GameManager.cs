@@ -126,32 +126,36 @@ public class GameManager : MonoBehaviour
                     UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
                     UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
                 }
-                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
-                {
-                    BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
-                    Debug.Log($"[Debug Cheat] BOSS LEVEL! bossType={GameBrain.Instance.CurrentLevelConfig.bossType} HP={BossHP}");
-                }
+                SetupBossDimensionForActiveLevel();
                 ChangeState(GameState.Playing);
                 isLevelingUp = false;
             }
-            // 1 = jump directly to level 10 (first boss level) for quick testing
-            if (UnityEngine.InputSystem.Keyboard.current.digit1Key.wasPressedThisFrame)
+            // Cheats for skipping levels: 1 -> 10, 2 -> 20, 3 -> 30, ..., 9 -> 90, 0 -> 100
+            int jumpTarget = -1;
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb.digit1Key.wasPressedThisFrame) jumpTarget = 10;
+            else if (kb.digit2Key.wasPressedThisFrame) jumpTarget = 20;
+            else if (kb.digit3Key.wasPressedThisFrame) jumpTarget = 30;
+            else if (kb.digit4Key.wasPressedThisFrame) jumpTarget = 40;
+            else if (kb.digit5Key.wasPressedThisFrame) jumpTarget = 50;
+            else if (kb.digit6Key.wasPressedThisFrame) jumpTarget = 60;
+            else if (kb.digit7Key.wasPressedThisFrame) jumpTarget = 70;
+            else if (kb.digit8Key.wasPressedThisFrame) jumpTarget = 80;
+            else if (kb.digit9Key.wasPressedThisFrame) jumpTarget = 90;
+            else if (kb.digit0Key.wasPressedThisFrame) jumpTarget = 100;
+
+            if (jumpTarget != -1)
             {
-                Debug.Log("[Debug Cheat] Jumping to Level 10 (Boss)");
+                Debug.Log($"[Debug Cheat] Jumping directly to Level {jumpTarget}");
                 if (DotSpawner.Instance != null) DotSpawner.Instance.ClearAll();
                 if (DotSpawner.Instance != null) DotSpawner.Instance.ResetBossSpawnState();
-                if (DifficultyManager.Instance != null) DifficultyManager.Instance.SetLevel(10);
+                if (DifficultyManager.Instance != null) DifficultyManager.Instance.SetLevel(jumpTarget);
                 if (UIManager.Instance != null)
                 {
                     UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
                     UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
                 }
-                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
-                {
-                    var cfg = GameBrain.Instance.CurrentLevelConfig;
-                    Debug.Log($"[Boss Test] isBossLevel={cfg.isBossLevel} bossType={cfg.bossType} allowedBalls={string.Join(",", cfg.allowedBalls)}");
-                    if (cfg.isBossLevel) BossHP = cfg.bossHP;
-                }
+                SetupBossDimensionForActiveLevel();
                 ChangeState(GameState.Playing);
                 isLevelingUp = false;
             }
@@ -201,6 +205,11 @@ public class GameManager : MonoBehaviour
             BestCombo = chainLength;
         }
 
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.RegisterCombo(chainLength);
+        }
+
         if (!IsFeverActive)
         {
             // Accumulate chain progress towards fever
@@ -217,7 +226,12 @@ public class GameManager : MonoBehaviour
     private void ActivateFeverMode()
     {
         IsFeverActive = true;
-        feverTimer = 5.0f;
+        float durationMod = 1.0f;
+        if (GameBrain.Instance != null)
+        {
+            durationMod += GameBrain.Instance.GetMutationValue("FeverDurationMod");
+        }
+        feverTimer = 5.0f * durationMod;
 
         if (UIManager.Instance != null)
         {
@@ -270,9 +284,27 @@ public class GameManager : MonoBehaviour
         int points = dotCount * 10;
         if (IsFeverActive) points *= 10;
 
+        float difficultyCurve = 1.0f;
+        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
+        {
+            difficultyCurve = GameBrain.Instance.CurrentLevelConfig.difficultyRating;
+        }
+        else if (DifficultyManager.Instance != null)
+        {
+            difficultyCurve = DifficultyManager.Instance.ActiveLevel * 0.1f + 0.9f;
+        }
+
+        float playerAdjustment = 1.0f;
+        if (GameBrain.Instance != null && GameBrain.Instance.meta != null)
+        {
+            playerAdjustment = Mathf.Clamp(GameBrain.Instance.meta.playerSkill, 0.5f, 2.0f);
+        }
+
+        int finalScore = Mathf.RoundToInt(points * difficultyCurve * playerAdjustment);
+
         if (ScoreManager.Instance != null)
         {
-            ScoreManager.Instance.AddPoints(points);
+            ScoreManager.Instance.AddPoints(finalScore);
         }
     }
 
@@ -280,11 +312,50 @@ public class GameManager : MonoBehaviour
     {
         if (!IsPlaying || isLevelingUp) return;
 
-        if (DifficultyManager.Instance != null && ScoreManager.Instance != null)
+        if (BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive)
+        {
+            if (BossDimensionManager.Instance.CheckBossWinCondition())
+            {
+                StartCoroutine(LevelUpCoroutine());
+            }
+        }
+        else if (ObjectiveManager.Instance != null)
+        {
+            if (ObjectiveManager.Instance.IsObjectiveMet())
+            {
+                StartCoroutine(LevelUpCoroutine());
+            }
+        }
+        else if (DifficultyManager.Instance != null && ScoreManager.Instance != null)
         {
             if (ScoreManager.Instance.CurrentScore >= DifficultyManager.Instance.ActiveGoal)
             {
                 StartCoroutine(LevelUpCoroutine());
+            }
+        }
+    }
+
+    private void SetupBossDimensionForActiveLevel()
+    {
+        if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
+        {
+            var cfg = GameBrain.Instance.CurrentLevelConfig;
+            if (cfg.isBossLevel)
+            {
+                if (BossDimensionManager.Instance == null)
+                {
+                    GameObject bdmGo = new GameObject("BossDimensionManager");
+                    bdmGo.AddComponent<BossDimensionManager>();
+                }
+                BossDimensionManager.Instance.InitializeBossLevel(cfg.id, cfg.bossType);
+                BossHP = cfg.bossHP;
+            }
+            else
+            {
+                if (BossDimensionManager.Instance != null)
+                {
+                    BossDimensionManager.Instance.CleanupBoss();
+                }
             }
         }
     }
@@ -383,47 +454,86 @@ public class GameManager : MonoBehaviour
             int nextLevel = DifficultyManager.Instance.ActiveLevel + 1;
             string previewText = DifficultyManager.Instance.GetLevelPreviewText(nextLevel);
 
-            UIManager.Instance.ShowLevelUpOverlay(nextLevel, previewText, () =>
+            bool wasBoss = BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive;
+
+            if (wasBoss)
             {
-                DifficultyManager.Instance.SetLevel(nextLevel);
-                UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
-                UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
-                
-                feverChainProgress = 0;
-                UIManager.Instance.UpdateFeverProgress(0f, FeverChainThreshold);
-
-                // Reset boss spawn state for new level
-                if (DotSpawner.Instance != null)
+                if (BossDimensionManager.Instance != null)
                 {
-                    DotSpawner.Instance.ResetBossSpawnState();
+                    BossDimensionManager.Instance.CleanupBoss();
                 }
 
-                if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
+                UIManager.Instance.ShowBossRewardOverlay(DifficultyManager.Instance.ActiveLevel, () =>
                 {
-                    BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
-                }
-
-                RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
-                if (rtc != null)
+                    LoadNextLevelAfterReward(nextLevel, previewText);
+                });
+            }
+            else
+            {
+                UIManager.Instance.ShowLevelUpOverlay(nextLevel, previewText, () =>
                 {
-                    rtc.ResetTimer();
-                }
-
-                CircularTimer ct = FindAnyObjectByType<CircularTimer>();
-                if (ct != null)
-                {
-                    ct.ResetTimer();
-                }
-
-                ChangeState(GameState.Playing);
-                isLevelingUp = false;
-            });
+                    LoadNextLevelAfterReward(nextLevel, previewText);
+                });
+            }
         }
         else
         {
             ChangeState(GameState.Playing);
             isLevelingUp = false;
         }
+    }
+
+    private void LoadNextLevelAfterReward(int nextLevel, string previewText)
+    {
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.Instance.SetLevel(nextLevel);
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateGoal(DifficultyManager.Instance.ActiveGoal);
+                UIManager.Instance.UpdateLevel(DifficultyManager.Instance.ActiveLevel);
+            }
+        }
+        
+        feverChainProgress = 0;
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.ResetObjectives();
+        }
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.ResetComboManager();
+        }
+        if (ChaosEventSystem.Instance != null)
+        {
+            ChaosEventSystem.Instance.StopActiveEvent();
+        }
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateFeverProgress(0f, FeverChainThreshold);
+        }
+
+        if (DotSpawner.Instance != null)
+        {
+            DotSpawner.Instance.ResetBossSpawnState();
+        }
+
+        SetupBossDimensionForActiveLevel();
+
+        RadialTimerController rtc = FindAnyObjectByType<RadialTimerController>();
+        if (rtc != null)
+        {
+            rtc.ResetTimer();
+        }
+
+        CircularTimer ct = FindAnyObjectByType<CircularTimer>();
+        if (ct != null)
+        {
+            ct.ResetTimer();
+        }
+
+        ChangeState(GameState.Playing);
+        isLevelingUp = false;
     }
 
     public void RestartGame()
@@ -434,6 +544,18 @@ public class GameManager : MonoBehaviour
         IsFeverActive = false;
         isLevelingUp = false;
         feverChainProgress = 0;
+        if (ObjectiveManager.Instance != null)
+        {
+            ObjectiveManager.Instance.ResetObjectives();
+        }
+        if (ComboManager.Instance != null)
+        {
+            ComboManager.Instance.ResetComboManager();
+        }
+        if (ChaosEventSystem.Instance != null)
+        {
+            ChaosEventSystem.Instance.StopActiveEvent();
+        }
 
         if (UIManager.Instance != null)
         {
@@ -468,10 +590,7 @@ public class GameManager : MonoBehaviour
         if (GameBrain.Instance != null && DifficultyManager.Instance != null)
         {
             GameBrain.Instance.SetCurrentLevel(DifficultyManager.Instance.ActiveLevel);
-            if (GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
-            {
-                BossHP = GameBrain.Instance.CurrentLevelConfig.bossHP;
-            }
+            SetupBossDimensionForActiveLevel();
         }
 
         if (DifficultyManager.Instance != null && UIManager.Instance != null)
@@ -548,6 +667,8 @@ public class GameManager : MonoBehaviour
     {
         if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel)
         {
+            if (GameBrain.Instance.CurrentLevelConfig.id == 10) return; // Level 10 uses ChaosStability and full BossDimensionManager rules!
+
             BossHP--;
             if (ComboManager.Instance != null)
             {

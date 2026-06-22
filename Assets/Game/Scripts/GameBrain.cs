@@ -58,7 +58,7 @@ public class GameBrain : MonoBehaviour
         SetCurrentLevel(1);
 
         // Run simulation tests offline at launch to calibrate
-        simLab.Run10000Tests(new LevelGenerator());
+        simLab.Run10000Tests(WorldDirector.Instance);
     }
 
     private void Update()
@@ -74,6 +74,11 @@ public class GameBrain : MonoBehaviour
     {
         CurrentLevelConfig = levelStream.Get(level);
         
+        if (WorldDirector.Instance != null)
+        {
+            WorldDirector.Instance.SpawnLevelElements(CurrentLevelConfig);
+        }
+
         if (CurrentLevelConfig.isBossLevel)
         {
             boss.GenerateBossTraits(level * 777);
@@ -86,6 +91,12 @@ public class GameBrain : MonoBehaviour
 
         // Record telemetry data
         TelemetrySystem.RecordLevelResult(won, CurrentLevelConfig.allowedBalls);
+
+        if (AdaptiveDirector.Instance != null && DifficultyManager.Instance != null)
+        {
+            AdaptiveDirector.Instance.RecordLevelTime(DifficultyManager.Instance.TimeElapsed);
+            AdaptiveDirector.Instance.AnalyzeAndAdapt();
+        }
 
         if (won)
         {

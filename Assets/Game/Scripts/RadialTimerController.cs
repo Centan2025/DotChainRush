@@ -62,7 +62,12 @@ public class RadialTimerController : MonoBehaviour
 
         if (currentTime > 0) 
         {
-            currentTime -= Time.deltaTime;
+            float timerSpeed = 1.0f;
+            if (ChaosOrbBossSystem.Instance != null && ChaosOrbBossSystem.Instance.IsActive)
+            {
+                timerSpeed = ChaosOrbBossSystem.Instance.TimeSpeedMultiplier;
+            }
+            currentTime -= Time.deltaTime * timerSpeed;
             UpdateUI();
 
             // Center countdown check for final 5 seconds (5, 4, 3, 2, 1)
@@ -173,6 +178,12 @@ public class RadialTimerController : MonoBehaviour
 
     public void ResetTimer()
     {
+        float bonusTime = 0f;
+        if (GameBrain.Instance != null)
+        {
+            bonusTime = GameBrain.Instance.GetMutationValue("TimeLimitMod");
+        }
+        totalTime = 90f + bonusTime;
         currentTime = totalTime;
         lastCountdownSecond = -1;
         

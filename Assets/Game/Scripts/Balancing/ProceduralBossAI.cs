@@ -37,16 +37,33 @@ public class ProceduralBossAI
 
     private TopTipi GetBossType(int level)
     {
-        int bossIdx = (level / 10) % 7;
-        switch (bossIdx)
+        switch (level)
         {
-            case 1: return TopTipi.KaosOrbBoss1;
-            case 2: return TopTipi.ElementalFuryBoss2;
-            case 3: return TopTipi.FlowMasterBoss4;
-            case 4: return TopTipi.ZamanLorduBoss;
-            case 5: return TopTipi.ChaosIncarnateBoss7;
-            case 6: return TopTipi.PrestigeBoss;
-            default: return TopTipi.TheVoidFinalBoss;
+            case 10: return TopTipi.KaosOrbBoss1;
+            case 30: return TopTipi.ElementalFuryBoss2;
+            case 50: return TopTipi.FlowMasterBoss4;
+            case 70: return TopTipi.ZamanLorduBoss;
+            case 100: return TopTipi.ChaosIncarnateBoss7;
+            case 120: return TopTipi.Glitch;
+            case 140: return TopTipi.GravityCore;
+            case 160: return TopTipi.Virus;
+            case 180: return TopTipi.Omega;
+            case 200: return TopTipi.TheVoidFinalBoss;
+            default:
+                int idx = (level / 10) % 10;
+                switch (idx)
+                {
+                    case 1: return TopTipi.KaosOrbBoss1;
+                    case 3: return TopTipi.ElementalFuryBoss2;
+                    case 5: return TopTipi.FlowMasterBoss4;
+                    case 7: return TopTipi.ZamanLorduBoss;
+                    case 0: return TopTipi.ChaosIncarnateBoss7;
+                    case 2: return TopTipi.Glitch;
+                    case 4: return TopTipi.GravityCore;
+                    case 6: return TopTipi.Virus;
+                    case 8: return TopTipi.Omega;
+                    default: return TopTipi.TheVoidFinalBoss;
+                }
         }
     }
 }

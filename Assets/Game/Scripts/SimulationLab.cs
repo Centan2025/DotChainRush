@@ -1,85 +1,182 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+
+[System.Serializable]
+public class SimulationIssue
+{
+    public int levelId;
+    public string problemType;
+    public string details;
+    public string suggestedFix;
+}
 
 [System.Serializable]
 public class SimulationLab
 {
-    public void Run10000Tests(LevelGenerator gen)
+    public List<SimulationIssue> detectedIssues = new List<SimulationIssue>();
+
+    public string Run10000Tests(WorldDirector director)
     {
-        Debug.Log("[SimulationLab] Initiating 10,000 game simulation tests to calibrate meta balancing...");
+        Debug.Log("[SimulationLab] Initiating 10,000 game simulation tests to calibrate level director...");
+        detectedIssues.Clear();
 
         int totalScore = 0;
         int winCount = 0;
         int failCount = 0;
+        int timeOutCount = 0;
 
-        Dictionary<TopTipi, int> simUsage = new Dictionary<TopTipi, int>();
-        foreach (TopTipi type in System.Enum.GetValues(typeof(TopTipi)))
-        {
-            simUsage[type] = 0;
-        }
+        Dictionary<int, int> levelWins = new Dictionary<int, int>();
+        Dictionary<int, int> levelTimeOuts = new Dictionary<int, int>();
+        Dictionary<int, int> levelAttempts = new Dictionary<int, int>();
 
-        // Run tests
+        // Run 10,000 tests across 200 levels
         for (int i = 0; i < 10000; i++)
         {
             int levelNum = (i % 200) + 1;
-            LevelConfig config = gen.GenerateLevel(levelNum);
+            LevelConfig config = director != null ? director.GenerateLevel(levelNum) : WorldDirector.Instance.GenerateLevel(levelNum);
 
-            // Simulate simple game outcome
-            int scoreReached = 0;
-            bool win = true;
+            if (!levelAttempts.ContainsKey(levelNum))
+            {
+                levelAttempts[levelNum] = 0;
+                levelWins[levelNum] = 0;
+                levelTimeOuts[levelNum] = 0;
+            }
+            levelAttempts[levelNum]++;
 
-            // Simple AI player model: pops groups of dots
-            int turns = Random.Range(10, 30);
+            // Simulate run
+            float simulatedScore = 0f;
+            float timeRemaining = config.baseTimer;
+            bool win = false;
+
+            // Player skill factor variation
+            float playerSkill = Random.Range(0.6f, 1.4f);
+            int turns = Random.Range(15, 35);
+
             for (int t = 0; t < turns; t++)
             {
-                // Select a random ball type from level's allowed list
-                if (config.allowedBalls.Count > 0)
-                {
-                    TopTipi chosen = config.allowedBalls[Random.Range(0, config.allowedBalls.Count)];
-                    simUsage[chosen]++;
+                // Simulate time delta for turn
+                float turnDuration = (config.spawnRate * 2.5f) / playerSkill;
+                timeRemaining -= turnDuration;
 
-                    int matchLength = Random.Range(3, 8);
-                    int multiplier = 1;
-                    if (matchLength >= 5) multiplier = 2;
-                    
-                    scoreReached += matchLength * 10 * multiplier;
+                if (timeRemaining <= 0)
+                {
+                    levelTimeOuts[levelNum]++;
+                    timeOutCount++;
+                    break;
+                }
+
+                // Simulate pop
+                int matchLength = Random.Range(3, 8);
+                float multiplier = 1.0f;
+                if (matchLength >= 5) multiplier = 1.5f;
+
+                // Add time bonuses from time dots
+                if (Random.value < 0.12f)
+                {
+                    float timeBonus = Random.Range(5f, 10f);
+                    timeRemaining = Mathf.Min(150f, timeRemaining + timeBonus); // clamped max time
+                }
+
+                float turnScore = matchLength * 10f * multiplier * config.difficultyRating * playerSkill;
+                simulatedScore += turnScore;
+
+                if (simulatedScore >= config.targetScore)
+                {
+                    win = true;
+                    levelWins[levelNum]++;
+                    winCount++;
+                    break;
                 }
             }
 
-            totalScore += scoreReached;
-            if (scoreReached >= config.targetScore)
-            {
-                winCount++;
-            }
-            else
-            {
-                failCount++;
-                win = false;
-            }
+            totalScore += Mathf.RoundToInt(simulatedScore);
+            if (!win) failCount++;
         }
 
-        float avgScore = (float)totalScore / 10000;
-        float winRate = (float)winCount / 10000 * 100f;
-
-        Debug.LogFormat("[SimulationLab] Completed 10,000 tests! Average Score: {0:F0}, Win Rate: {1:F2}%, Fails: {2}", 
-            avgScore, winRate, failCount);
-
-        // Find top used special ball types
-        List<KeyValuePair<TopTipi, int>> usageList = new List<KeyValuePair<TopTipi, int>>();
-        foreach (var pair in simUsage)
+        // 2) Analyze Results & Generate Diagnostic Fix Suggestions
+        for (int levelNum = 1; levelNum <= 200; levelNum++)
         {
-            if (!BalanceDB.IsNormalColor(pair.Key))
+            int attempts = levelAttempts.ContainsKey(levelNum) ? levelAttempts[levelNum] : 0;
+            int wins = levelWins.ContainsKey(levelNum) ? levelWins[levelNum] : 0;
+            int timeouts = levelTimeOuts.ContainsKey(levelNum) ? levelTimeOuts[levelNum] : 0;
+
+            float winRate = attempts > 0 ? (float)wins / attempts : 0f;
+            float timeoutRate = attempts > 0 ? (float)timeouts / attempts : 0f;
+
+            if (winRate < 0.20f)
             {
-                usageList.Add(pair);
+                detectedIssues.Add(new SimulationIssue
+                {
+                    levelId = levelNum,
+                    problemType = "Difficulty Spike / Wall",
+                    details = $"Win rate is extremely low ({winRate:P0}) over {attempts} attempts.",
+                    suggestedFix = "Reduce targetScore by 20%, increase spawnRate (interval) by 10%, or reduce initial gravityScale."
+                });
+            }
+            else if (winRate > 0.95f)
+            {
+                detectedIssues.Add(new SimulationIssue
+                {
+                    levelId = levelNum,
+                    problemType = "Too Easy",
+                    details = $"Win rate is too high ({winRate:P0}) over {attempts} attempts.",
+                    suggestedFix = "Increase targetScore by 15%, increase gravityScale, or speed up spawnRate (interval)."
+                });
+            }
+
+            if (timeoutRate > 0.40f)
+            {
+                detectedIssues.Add(new SimulationIssue
+                {
+                    levelId = levelNum,
+                    problemType = "Time Problem / Timeouts",
+                    details = $"Players time out in {timeoutRate:P0} of runs.",
+                    suggestedFix = "Increase level baseTimer by 15 seconds, or increase the spawn rate of Time Balls."
+                });
             }
         }
 
-        usageList.Sort((x, y) => y.Value.CompareTo(x.Value));
-
-        Debug.Log("[SimulationLab] Meta Balancing Report - Top Special Balls Populated in Levels:");
-        for (int k = 0; k < Mathf.Min(5, usageList.Count); k++)
+        // Write report file
+        string reportText = GenerateTextReport(winCount, failCount, timeOutCount);
+        string reportPath = Path.Combine(Application.dataPath, "BalanceReport.txt");
+        try
         {
-            Debug.LogFormat(" - {0}: {1} spawns simulated", usageList[k].Key, usageList[k].Value);
+            File.WriteAllText(reportPath, reportText);
+            Debug.Log("[SimulationLab] Report exported successfully to: Assets/BalanceReport.txt");
         }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("[SimulationLab] Failed to write report file: " + ex.Message);
+        }
+
+        return reportText;
+    }
+
+    private string GenerateTextReport(int wins, int fails, int timeouts)
+    {
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.AppendLine("============================================================");
+        sb.AppendLine("DOT GAME — AAA SIMULATION LAB BALANCE REPORT");
+        sb.AppendLine("============================================================");
+        sb.AppendLine($"Total Virtual Runs: 10,000");
+        sb.AppendLine($"Global Wins: {wins} ({ (float)wins / 10000:P1} win rate)");
+        sb.AppendLine($"Global Fails: {fails}");
+        sb.AppendLine($"Global Time-Outs: {timeouts}");
+        sb.AppendLine($"Total Issues Detected: {detectedIssues.Count}");
+        sb.AppendLine("============================================================");
+        sb.AppendLine();
+        sb.AppendLine("LEVEL DIAGNOSTICS & RECOMMENDED FIXES:");
+        sb.AppendLine("------------------------------------------------------------");
+
+        foreach (var issue in detectedIssues)
+        {
+            sb.AppendLine($"Level {issue.levelId} | Problem: {issue.problemType}");
+            sb.AppendLine($"  - Details: {issue.details}");
+            sb.AppendLine($"  - Suggested Fix: {issue.suggestedFix}");
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
     }
 }

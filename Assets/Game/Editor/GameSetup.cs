@@ -444,12 +444,66 @@ public class GameSetup
             }
         }
 
+        // 2g. Generate Metal Shard Texture for particles
+        string metalShardPath = "Assets/Game/UI/MetalShard.png";
+        {
+            Texture2D tex = new Texture2D(64, 64, TextureFormat.RGBA32, false);
+            for (int y = 0; y < 64; y++)
+            {
+                for (int x = 0; x < 64; x++)
+                {
+                    float dx = (x - 31.5f) / 31.5f;
+                    float dy = (y - 31.5f) / 31.5f;
+                    // Elongated diamond/shard shape
+                    float dist = Mathf.Abs(dx) * 1.5f + Mathf.Abs(dy);
+
+                    if (dist <= 1.0f)
+                    {
+                        float nx = dx * 1.5f;
+                        float ny = dy;
+                        float nz = Mathf.Sqrt(Mathf.Max(0f, 1f - nx * nx - ny * ny));
+
+                        // Specular lighting from top-left (metallic reflection)
+                        float spec = Mathf.Pow(Mathf.Max(0f, -0.5f * nx + 0.5f * ny + 0.7f * nz), 12f);
+                        float diffuse = 0.4f + 0.6f * nz;
+                        float v = Mathf.Clamp01(diffuse + spec);
+                        float alpha = Mathf.Clamp01((1.0f - dist) * 4f);
+
+                        tex.SetPixel(x, y, new Color(v, v, v, alpha));
+                    }
+                    else
+                    {
+                        tex.SetPixel(x, y, Color.clear);
+                    }
+                }
+            }
+            tex.Apply();
+            byte[] bytes = tex.EncodeToPNG();
+            System.IO.File.WriteAllBytes(metalShardPath, bytes);
+            AssetDatabase.ImportAsset(metalShardPath);
+
+            TextureImporter importer = AssetImporter.GetAtPath(metalShardPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spritePixelsPerUnit = 64f;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.mipmapEnabled = false;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+        }
+
         Sprite circleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(texturePath);
         Sprite highlightSprite = AssetDatabase.LoadAssetAtPath<Sprite>(highlightPath);
         Sprite specialRingSprite = AssetDatabase.LoadAssetAtPath<Sprite>(specialRingPath);
         Sprite smokeGlowSprite = AssetDatabase.LoadAssetAtPath<Sprite>(smokeGlowPath);
         Sprite rainbowSprite = AssetDatabase.LoadAssetAtPath<Sprite>(rainbowCirclePath);
         Sprite obstacleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(obstaclePath);
+        Sprite metalShardSprite = AssetDatabase.LoadAssetAtPath<Sprite>(metalShardPath);
+
+        string starPath = "Assets/Textures/star.png";
+        Sprite starSprite = AssetDatabase.LoadAssetAtPath<Sprite>(starPath);
 
         // Create/Fetch Zero Friction Physics Material
         PhysicsMaterial2D physicsMat = AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>("Assets/Game/Materials/DotPhysicsMaterial.physicsMaterial2D");
@@ -462,8 +516,8 @@ public class GameSetup
         }
 
         // 3. Create/Update Circle Prefabs
-        UpdateCirclePrefab("Assets/Game/Prefabs/Circle.prefab", circleSprite, highlightSprite, specialRingSprite, smokeGlowSprite, rainbowSprite, obstacleSprite, physicsMat);
-        UpdateCirclePrefab("Assets/Prefabs/Circle.prefab", circleSprite, highlightSprite, specialRingSprite, smokeGlowSprite, rainbowSprite, obstacleSprite, physicsMat);
+        UpdateCirclePrefab("Assets/Game/Prefabs/Circle.prefab", circleSprite, highlightSprite, specialRingSprite, smokeGlowSprite, rainbowSprite, obstacleSprite, starSprite, physicsMat);
+        UpdateCirclePrefab("Assets/Prefabs/Circle.prefab", circleSprite, highlightSprite, specialRingSprite, smokeGlowSprite, rainbowSprite, obstacleSprite, starSprite, physicsMat);
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Game/Prefabs/Circle.prefab");
 
         // 3b. Create Particle Explosion Prefab
@@ -477,7 +531,7 @@ public class GameSetup
             main.duration = 0.5f;
             main.loop = false;
             main.startSizeMultiplier = 1f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.32f); // Random size
+            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.35f); // Random size
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.65f); // Random lifetime
             main.startSpeed = new ParticleSystem.MinMaxCurve(8f, 13f); // Super fast initial velocity for explosive shockwave
             main.stopAction = ParticleSystemStopAction.Destroy;
@@ -519,7 +573,12 @@ public class GameSetup
             var textureSheet = ps.textureSheetAnimation;
             textureSheet.enabled = true;
             textureSheet.mode = ParticleSystemAnimationMode.Sprites;
-            textureSheet.AddSprite(circleSprite);
+            textureSheet.AddSprite(metalShardSprite != null ? metalShardSprite : circleSprite);
+
+            // Enable Rotation over lifetime for rotating metallic shards
+            var rotationOverLifetime = ps.rotationOverLifetime;
+            rotationOverLifetime.enabled = true;
+            rotationOverLifetime.z = new ParticleSystem.MinMaxCurve(-360f, 360f);
 
             ParticleSystemRenderer psr = tempGO.GetComponent<ParticleSystemRenderer>();
             if (psr != null)
@@ -1541,7 +1600,7 @@ public class GameSetup
         Debug.Log("[Setup] Scene saved successfully!");
     }
 
-    private static void UpdateCirclePrefab(string prefabPath, Sprite circleSprite, Sprite highlightSprite, Sprite specialRingSprite, Sprite smokeGlowSprite, Sprite rainbowSprite, Sprite obstacleSprite, PhysicsMaterial2D physicsMat)
+    private static void UpdateCirclePrefab(string prefabPath, Sprite circleSprite, Sprite highlightSprite, Sprite specialRingSprite, Sprite smokeGlowSprite, Sprite rainbowSprite, Sprite obstacleSprite, Sprite starSprite, PhysicsMaterial2D physicsMat)
     {
         GameObject tempGO;
         bool exists = System.IO.File.Exists(prefabPath);
@@ -1596,6 +1655,7 @@ public class GameSetup
         soDot.FindProperty("normalSprite").objectReferenceValue = circleSprite;
         soDot.FindProperty("specialSprite").objectReferenceValue = rainbowSprite;
         soDot.FindProperty("obstacleSprite").objectReferenceValue = obstacleSprite;
+        soDot.FindProperty("starSprite").objectReferenceValue = starSprite;
         soDot.ApplyModifiedProperties();
 
         // Create the highlight child using the highlightSprite (3D specular and shadow overlay)
@@ -1665,6 +1725,29 @@ public class GameSetup
         specialRingGO.transform.localPosition = Vector3.zero;
         specialRingGO.transform.localScale = Vector3.one;
         specialRingGO.SetActive(false); // Disabled by default, enabled dynamically in Dot.cs
+
+        // Create/Update the StarSparkle child of SpecialRing
+        Transform starTransform = specialRingGO.transform.Find("StarSparkle");
+        GameObject starGO;
+        if (starTransform == null)
+        {
+            starGO = new GameObject("StarSparkle");
+            starGO.transform.SetParent(specialRingGO.transform, false);
+        }
+        else
+        {
+            starGO = starTransform.gameObject;
+        }
+
+        SpriteRenderer starSR = starGO.GetComponent<SpriteRenderer>();
+        if (starSR == null) starSR = starGO.AddComponent<SpriteRenderer>();
+        starSR.sprite = starSprite;
+        starSR.color = Color.white;
+        starSR.sortingOrder = 3; // Render on top of specialRing
+
+        starGO.transform.localPosition = new Vector3(0.5f, 0f, 0f); // Positioned on the ring circumference
+        starGO.transform.localScale = Vector3.one * 0.25f;
+        starGO.SetActive(false);
 
         PrefabUtility.SaveAsPrefabAsset(tempGO, prefabPath);
         Object.DestroyImmediate(tempGO);

@@ -6,15 +6,29 @@ using UnityEngine;
 public class LevelConfig
 {
     public int id;
-    public string theme;
+    public float difficultyRating = 1.0f;
+    public string theme = "Neon Grid";
+    public string biome = "Grid";
+    public int seed;
+
+    public int targetScore;
+    public float baseTimer = 90f;
+    public int comboRequirement = 0;
+    public LevelObjectiveType objectiveType = LevelObjectiveType.Score;
+    public int destroyTargetCount = 0;
+    public TopTipi targetColor = TopTipi.KirmiziTop;
+    public TopTipi targetSpecialBall = TopTipi.Gokkusagi;
+
     public float spawnRate; // spawn interval in seconds
     public float speed;     // gravity scale
-    public int targetScore;
-    public List<TopTipi> allowedBalls = new List<TopTipi>();
     public bool isBossLevel;
     public TopTipi bossType;
     public int bossHP;
     public string previewText;
+
+    public List<TopTipi> allowedBalls = new List<TopTipi>();
+    public List<ObstacleType> obstacleTypes = new List<ObstacleType>();
+    public List<ChaosEventType> potentialEvents = new List<ChaosEventType>();
 }
 
 public class LevelGenerator
@@ -124,16 +138,33 @@ public class LevelGenerator
 
     private TopTipi GetBossTypeForLevel(int level)
     {
-        int bossIndex = (level / 10) % 7;
-        switch (bossIndex)
+        switch (level)
         {
-            case 1: return TopTipi.KaosOrbBoss1;
-            case 2: return TopTipi.ElementalFuryBoss2;
-            case 3: return TopTipi.FlowMasterBoss4;
-            case 4: return TopTipi.ZamanLorduBoss;
-            case 5: return TopTipi.ChaosIncarnateBoss7;
-            case 6: return TopTipi.PrestigeBoss;
-            default: return TopTipi.TheVoidFinalBoss;
+            case 10: return TopTipi.KaosOrbBoss1;
+            case 30: return TopTipi.ElementalFuryBoss2;
+            case 50: return TopTipi.FlowMasterBoss4;
+            case 70: return TopTipi.ZamanLorduBoss;
+            case 100: return TopTipi.ChaosIncarnateBoss7;
+            case 120: return TopTipi.Glitch;
+            case 140: return TopTipi.GravityCore;
+            case 160: return TopTipi.Virus;
+            case 180: return TopTipi.Omega;
+            case 200: return TopTipi.TheVoidFinalBoss;
+            default:
+                int idx = (level / 10) % 10;
+                switch (idx)
+                {
+                    case 1: return TopTipi.KaosOrbBoss1;
+                    case 3: return TopTipi.ElementalFuryBoss2;
+                    case 5: return TopTipi.FlowMasterBoss4;
+                    case 7: return TopTipi.ZamanLorduBoss;
+                    case 0: return TopTipi.ChaosIncarnateBoss7;
+                    case 2: return TopTipi.Glitch;
+                    case 4: return TopTipi.GravityCore;
+                    case 6: return TopTipi.Virus;
+                    case 8: return TopTipi.Omega;
+                    default: return TopTipi.TheVoidFinalBoss;
+                }
         }
     }
 
@@ -141,13 +172,16 @@ public class LevelGenerator
     {
         switch (type)
         {
-            case TopTipi.KaosOrbBoss1: return "Kaos Küresi";
-            case TopTipi.ElementalFuryBoss2: return "Elementlerin Öfkesi";
-            case TopTipi.FlowMasterBoss4: return "Akış Ustası";
-            case TopTipi.ZamanLorduBoss: return "Zaman Lordu";
-            case TopTipi.ChaosIncarnateBoss7: return "Kaos Bedeni";
-            case TopTipi.PrestigeBoss: return "Prestij Lordu";
-            case TopTipi.TheVoidFinalBoss: return "BOŞLUK FİNAL BOSS";
+            case TopTipi.KaosOrbBoss1: return "Chaos Orb";
+            case TopTipi.ElementalFuryBoss2: return "Elemental Fury";
+            case TopTipi.FlowMasterBoss4: return "Flow Master";
+            case TopTipi.ZamanLorduBoss: return "Time Lord";
+            case TopTipi.ChaosIncarnateBoss7: return "Void Entity";
+            case TopTipi.Glitch: return "Glitch God";
+            case TopTipi.GravityCore: return "Gravity Core";
+            case TopTipi.Virus: return "Virus Mind";
+            case TopTipi.Omega: return "Omega";
+            case TopTipi.TheVoidFinalBoss: return "THE SYSTEM";
             default: return "Gizemli Koruyucu";
         }
     }

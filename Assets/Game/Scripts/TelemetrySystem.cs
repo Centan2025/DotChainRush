@@ -14,6 +14,12 @@ public static class TelemetrySystem
     public static int levelsPlayed = 0;
     public static int levelsFailed = 0;
 
+    // Boss Telemetry
+    public static float lastBossCompletionTime = 0f;
+    public static int lastBossFailedAttempts = 0;
+    public static int lastBossComboCount = 0;
+    public static Dictionary<string, int> bossDamageSources = new Dictionary<string, int>();
+
     static TelemetrySystem()
     {
         ResetTelemetry();
@@ -78,5 +84,30 @@ public static class TelemetrySystem
                 winRate[b] = (float)wins[b] / total;
             }
         }
+    }
+
+    public static void RecordBossResult(bool won, float completionTime, int comboCount)
+    {
+        if (won)
+        {
+            lastBossCompletionTime = completionTime;
+            lastBossComboCount = comboCount;
+            // Next time a boss is encountered, we use these metrics
+            // Reset attempts for next boss
+            lastBossFailedAttempts = 0; 
+        }
+        else
+        {
+            lastBossFailedAttempts++;
+        }
+    }
+
+    public static void RecordBossDamageSource(string sourceName)
+    {
+        if (!bossDamageSources.ContainsKey(sourceName))
+        {
+            bossDamageSources[sourceName] = 0;
+        }
+        bossDamageSources[sourceName]++;
     }
 }

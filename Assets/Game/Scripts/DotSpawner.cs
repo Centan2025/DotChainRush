@@ -50,27 +50,14 @@ public class DotSpawner : MonoBehaviour
         {
             spawnTimer = 0f;
 
-            // Don't spawn if the area near spawn height is already occupied
-            // This prevents dots from piling above the play area frame
-            bool spawnAreaClear = true;
-            Dot blockingDot = null;
-            for (int i = 0; i < activeDots.Count; i++)
+            Vector3 dynamicSpawnPos = GetDynamicSpawnPosition();
+            if (IsDynamicSpawnAreaClear(dynamicSpawnPos))
             {
-                if (activeDots[i] != null && activeDots[i].transform.position.y > spawnY - 0.5f)
-                {
-                    spawnAreaClear = false;
-                    blockingDot = activeDots[i];
-                    break;
-                }
-            }
-
-            if (spawnAreaClear)
-            {
-                SpawnDot();
+                SpawnDot(dynamicSpawnPos);
             }
             else
             {
-                Debug.Log($"[Spawner] Spawn BLOCKED: dot near spawnY. Blocking dot: {blockingDot?.gameObject.name} | Type: {blockingDot?.Type} | Y: {blockingDot?.transform.position.y:F2} (spawnY={spawnY:F2})");
+                Debug.Log($"[Spawner] Spawn BLOCKED: dot near spawn location {dynamicSpawnPos}");
             }
         }
 
@@ -217,26 +204,37 @@ public class DotSpawner : MonoBehaviour
         return Random.Range(0, 5);
     }
 
-    public GameObject SpawnDot()
+    public GameObject SpawnSpecificDotAtPosition(TopTipi type, Vector3 spawnPos)
     {
         if (ObjectPool.Instance == null) return null;
 
-        // Calculate dynamic column count based on screen width (minX to maxX) and dot diameter (~0.52f)
-        float dotSize = 0.52f;
-        float playWidth = maxX - minX;
+        GameObject dotGO = ObjectPool.Instance.Get();
+        dotGO.transform.position = spawnPos;
+        dotGO.transform.rotation = Quaternion.identity;
         
-        // Ensure at least 3 columns, otherwise calculate how many dots fit with spacing (approx every 0.8f units)
-        int columnCount = Mathf.Max(3, Mathf.FloorToInt(playWidth / 0.8f) + 1);
-        
-        int randomCol = Random.Range(0, columnCount);
-        float step = (columnCount > 1) ? (maxX - minX) / (columnCount - 1) : 0f;
-        
-        // Add a micro random offset (+/- 0.05f) to prevent dots from stacking in perfect, unnatural vertical lines
-        float microOffset = Random.Range(-0.06f, 0.06f);
-        float spawnX = minX + randomCol * step + microOffset;
-        
-        Vector3 spawnPos = new Vector3(spawnX, spawnY, 0f);
-        
+        Dot dot = dotGO.GetComponent<Dot>();
+        if (dot == null)
+        {
+            dot = dotGO.AddComponent<Dot>();
+        }
+
+        DotType dotType = (DotType)type;
+        int colorId = GetColorIdForType(type);
+        dot.Init(colorId, dotType, OnDotLifeEnded);
+
+        if (BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive)
+        {
+            BossDimensionManager.Instance.OverrideSpawn(dot);
+        }
+
+        activeDots.Add(dot);
+        return dotGO;
+    }
+
+    public GameObject SpawnDot(Vector3 spawnPos)
+    {
+        if (ObjectPool.Instance == null) return null;
+
         GameObject dotGO = ObjectPool.Instance.Get();
         dotGO.transform.position = spawnPos;
         dotGO.transform.rotation = Quaternion.identity;
@@ -249,6 +247,8 @@ public class DotSpawner : MonoBehaviour
 
         // Get allowed balls from GameBrain
         List<TopTipi> allowed = null;
+        bool isLevel10 = GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.id == 10;
+        
         if (GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null)
         {
             allowed = GameBrain.Instance.CurrentLevelConfig.allowedBalls;
@@ -259,48 +259,67 @@ public class DotSpawner : MonoBehaviour
             allowed = new List<TopTipi> { TopTipi.KirmiziTop, TopTipi.MaviTop, TopTipi.YesilTop, TopTipi.SariTop, TopTipi.MorTop };
         }
 
-        // Weighted random selection based on BalanceDB.spawn
-        float totalWeight = 0f;
-        foreach (var b in allowed)
-        {
-            float w = BalanceDB.spawn.ContainsKey(b) ? BalanceDB.spawn[b] : 1f;
-            totalWeight += w;
-        }
-
         TopTipi chosenType = allowed[0];
-        float r = Random.value * totalWeight;
-        float sum = 0f;
-        foreach (var b in allowed)
+
+        if (isLevel10)
         {
-            float w = BalanceDB.spawn.ContainsKey(b) ? BalanceDB.spawn[b] : 1f;
-            sum += w;
-            if (r <= sum)
+            float roll = Random.value;
+            if (roll < 0.20f) chosenType = TopTipi.KirmiziTop;
+            else if (roll < 0.40f) chosenType = TopTipi.MaviTop;
+            else if (roll < 0.60f) chosenType = TopTipi.YesilTop;
+            else if (roll < 0.75f) chosenType = TopTipi.SariTop;
+            else if (roll < 0.90f) chosenType = TopTipi.MorTop;
+            else if (roll < 0.95f) chosenType = TopTipi.Bomba;
+            else if (roll < 0.98f) chosenType = TopTipi.AgirTop;
+            else chosenType = TopTipi.Gokkusagi;
+
+            if (ChaosOrbBossSystem.Instance != null && ChaosOrbBossSystem.Instance.ShouldSpawnFakeBall())
             {
-                chosenType = b;
-                break;
+                chosenType = TopTipi.SahteTop;
             }
         }
-
-        // Boss level: guarantee first spawn is a boss, then 60% chance on subsequent spawns
-        bool isBossLevelNow = GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel;
-        Debug.Log($"[Spawner] SpawnDot called | isBossLevel={isBossLevelNow} | bossGuaranteedSpawned={bossGuaranteedSpawned} | chosenSoFar={chosenType}");
-
-        if (isBossLevelNow)
+        else
         {
-            if (!bossGuaranteedSpawned)
+            // Weighted random selection based on BalanceDB.spawn + mutations
+            float totalWeight = 0f;
+            foreach (var b in allowed)
             {
-                chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
-                bossGuaranteedSpawned = true;
-                Debug.Log($"[Spawner] BOSS GUARANTEED → {chosenType}");
+                totalWeight += GetSpawnWeight(b);
             }
-            else if (Random.value < 0.60f)
+
+            float r = Random.value * totalWeight;
+            float sum = 0f;
+            foreach (var b in allowed)
             {
-                chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
-                Debug.Log($"[Spawner] BOSS 60% ROLL → {chosenType}");
+                sum += GetSpawnWeight(b);
+                if (r <= sum)
+                {
+                    chosenType = b;
+                    break;
+                }
             }
-            else
+
+            // Boss level: guarantee first spawn is a boss, then 60% chance on subsequent spawns
+            bool isBossLevelNow = GameBrain.Instance != null && GameBrain.Instance.CurrentLevelConfig != null && GameBrain.Instance.CurrentLevelConfig.isBossLevel;
+            Debug.Log($"[Spawner] SpawnDot called | isBossLevel={isBossLevelNow} | bossGuaranteedSpawned={bossGuaranteedSpawned} | chosenSoFar={chosenType}");
+
+            if (isBossLevelNow)
             {
-                Debug.Log($"[Spawner] Boss roll missed → normal type {chosenType}");
+                if (!bossGuaranteedSpawned)
+                {
+                    chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
+                    bossGuaranteedSpawned = true;
+                    Debug.Log($"[Spawner] BOSS GUARANTEED → {chosenType}");
+                }
+                else if (Random.value < 0.60f)
+                {
+                    chosenType = GameBrain.Instance.CurrentLevelConfig.bossType;
+                    Debug.Log($"[Spawner] BOSS 60% ROLL → {chosenType}");
+                }
+                else
+                {
+                    Debug.Log($"[Spawner] Boss roll missed → normal type {chosenType}");
+                }
             }
         }
 
@@ -308,6 +327,12 @@ public class DotSpawner : MonoBehaviour
         int colorId = GetColorIdForType(chosenType);
 
         dot.Init(colorId, type, OnDotLifeEnded);
+
+        if (BossDimensionManager.Instance != null && BossDimensionManager.Instance.IsBossLevelActive)
+        {
+            BossDimensionManager.Instance.OverrideSpawn(dot);
+        }
+
         activeDots.Add(dot);
 
         return dotGO;
@@ -339,5 +364,101 @@ public class DotSpawner : MonoBehaviour
     private void OnDotLifeEnded(Dot dot)
     {
         DespawnDot(dot);
+    }
+
+    private float GetSpawnWeight(TopTipi b)
+    {
+        float w = BalanceDB.spawn.ContainsKey(b) ? BalanceDB.spawn[b] : 1f;
+
+        if (GameBrain.Instance != null)
+        {
+            if (b == TopTipi.Bomba || b == TopTipi.Ates || b == TopTipi.Nukleer)
+            {
+                w += GameBrain.Instance.GetMutationValue("BombChanceMod") * 10f;
+            }
+            if (b == TopTipi.Gokkusagi || b == TopTipi.VoidRainbow)
+            {
+                w += GameBrain.Instance.GetMutationValue("RainbowChanceMod") * 10f;
+            }
+            if (b == TopTipi.Magnet)
+            {
+                w += GameBrain.Instance.GetMutationValue("MagnetChanceMod") * 10f;
+            }
+
+            // Unlocked special balls
+            if (b == TopTipi.Bosluk && GameBrain.Instance.GetMutationValue("UnlockVoidBall") > 0) w += 8f;
+            if (b == TopTipi.Elektrik && GameBrain.Instance.GetMutationValue("UnlockElectricBall") > 0) w += 8f;
+            if (b == TopTipi.Teleport && GameBrain.Instance.GetMutationValue("UnlockTeleportBall") > 0) w += 8f;
+            if (b == TopTipi.ZamanBukucu && GameBrain.Instance.GetMutationValue("UnlockTimeBenderBall") > 0) w += 8f;
+            if (b == TopTipi.Kuantum && GameBrain.Instance.GetMutationValue("UnlockQuantumBall") > 0) w += 8f;
+            if (b == TopTipi.Glitch && GameBrain.Instance.GetMutationValue("UnlockGlitchBall") > 0) w += 8f;
+            if (b == TopTipi.GravityCore && GameBrain.Instance.GetMutationValue("UnlockGravityCoreBall") > 0) w += 8f;
+            if (b == TopTipi.Omega && GameBrain.Instance.GetMutationValue("UnlockOmegaBall") > 0) w += 8f;
+            if (b == TopTipi.PrestigeBoss && GameBrain.Instance.GetMutationValue("UnlockPrestigeBall") > 0) w += 8f;
+        }
+
+        // Apply RainbowDampener boss adaptation
+        if (BossDimensionManager.Instance != null && 
+            BossDimensionManager.Instance.IsBossLevelActive && 
+            BossDimensionManager.Instance.Adaptation.counterAbility == "RainbowDampener")
+        {
+            if (b == TopTipi.Gokkusagi || b == TopTipi.VoidRainbow || b == TopTipi.GokkusagiKani)
+            {
+                w = 0f;
+            }
+        }
+
+        return w;
+    }
+
+    private Vector3 GetDynamicSpawnPosition()
+    {
+        Vector2 g = Physics2D.gravity;
+        
+        float playWidth = maxX - minX;
+        int columnCount = Mathf.Max(3, Mathf.FloorToInt(playWidth / 0.8f) + 1);
+        int randomCol = Random.Range(0, columnCount);
+        float step = (columnCount > 1) ? (maxX - minX) / (columnCount - 1) : 0f;
+        float microOffset = Random.Range(-0.06f, 0.06f);
+        
+        // If gravity is upward (gravity.y > 2.0f)
+        if (g.y > 2.0f)
+        {
+            float spawnX = minX + randomCol * step + microOffset;
+            // Spawn exactly on top of the bottom wall (approx -3.6 + 0.22 radius)
+            float spawnYBottom = -3.38f; 
+            return new Vector3(spawnX, spawnYBottom, 0f);
+        }
+        // If gravity is leftward (gravity.x < -2.0f)
+        else if (g.x < -2.0f)
+        {
+            // Cancel the 0.15f margin so dot perfectly hugs the right wall
+            float spawnXRight = maxX + 0.15f; 
+            float spawnYPos = Random.Range(-2.5f, 2.0f);
+            return new Vector3(spawnXRight, spawnYPos, 0f);
+        }
+        // If gravity is rightward (gravity.x > 2.0f)
+        else if (g.x > 2.0f)
+        {
+            // Cancel the 0.15f margin so dot perfectly hugs the left wall
+            float spawnXLeft = minX - 0.15f; 
+            float spawnYPos = Random.Range(-2.5f, 2.0f);
+            return new Vector3(spawnXLeft, spawnYPos, 0f);
+        }
+        
+        float defaultSpawnX = minX + randomCol * step + microOffset;
+        return new Vector3(defaultSpawnX, spawnY, 0f);
+    }
+
+    private bool IsDynamicSpawnAreaClear(Vector3 spawnPos)
+    {
+        for (int i = 0; i < activeDots.Count; i++)
+        {
+            if (activeDots[i] != null && Vector2.Distance(activeDots[i].transform.position, spawnPos) < 0.6f)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

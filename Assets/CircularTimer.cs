@@ -146,6 +146,12 @@ public class CircularTimer : MonoBehaviour
 
     public void ResetTimer()
     {
+        float bonusTime = 0f;
+        if (GameBrain.Instance != null)
+        {
+            bonusTime = GameBrain.Instance.GetMutationValue("TimeLimitMod");
+        }
+        totalTime = 90f + bonusTime;
         time = totalTime;
         lastCountdownSecond = -1;
 

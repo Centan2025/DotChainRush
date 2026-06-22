@@ -103,9 +103,9 @@ public class AudioManager : MonoBehaviour
         matchClips[1] = CreateChordClip(554.37f, 0.3f); // C#5 chord
         matchClips[2] = CreateChordClip(659.25f, 0.3f); // E5 chord
 
-        // 3. Milestone Clips (4 levels)
-        milestoneClips = new AudioClip[4];
-        for (int i = 0; i < 4; i++)
+        // 3. Milestone Clips (6 levels)
+        milestoneClips = new AudioClip[6];
+        for (int i = 0; i < 6; i++)
         {
             float freq = 220f * (i + 2);
             milestoneClips[i] = CreateSynthClip(freq, 0.6f, false);

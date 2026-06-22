@@ -9,7 +9,14 @@ public class LevelStream
     {
         if (!cache.ContainsKey(id))
         {
-            cache[id] = generator.GenerateLevel(id);
+            if (WorldDirector.Instance != null)
+            {
+                cache[id] = WorldDirector.Instance.GenerateLevel(id);
+            }
+            else
+            {
+                cache[id] = generator.GenerateLevel(id);
+            }
         }
         return cache[id];
     }
