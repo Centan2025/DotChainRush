@@ -236,6 +236,18 @@ public class Dot : MonoBehaviour
                 float breathe = 1.45f + 0.1f * Mathf.Sin(Time.time * 3f + GetHashCode() % 5);
                 smokeTransform.localScale = Vector3.one * breathe;
             }
+
+            // Roll effect: dynamically rotate the dot based on its horizontal physical movement
+            if (rb != null)
+            {
+                float vx = rb.linearVelocity.x;
+                if (Mathf.Abs(vx) > 0.02f)
+                {
+                    float radius = 0.22f; // approximate radius of normal dot
+                    float rotSpeed = -(vx / radius) * Mathf.Rad2Deg;
+                    transform.Rotate(Vector3.forward * rotSpeed * Time.deltaTime);
+                }
+            }
         }
 
         // Keep Highlight and Smoke at fixed world rotation so specular/glow
